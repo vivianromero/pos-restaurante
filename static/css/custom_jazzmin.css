@@ -1,0 +1,25 @@
+/* Cambiar el icono del botón "Panel de control" */
+/* Reemplazar el icono del botón azul "Panel de control" */
+.nav-item a[href="/admin/"] i {
+    display: none; /* Oculta el ícono original */
+}
+
+.nav-item a[href="/admin/"]::before {
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    content: "\f0e4"; /* fa-tachometer-alt */
+    margin-right: 8px;
+    color: #ffffff; /* blanco para contraste */
+}
+
+/* por ejemplo en static/css/custom.css */
+.btn-danger {
+    background-color: #FF6559!important;  /* tu color */
+    border-color: #FF6559 !important;
+    color: #fff !important;
+}
+
+.brand-link {
+    background-color: gray !important;  /* color distinto para el logo */
+}
+

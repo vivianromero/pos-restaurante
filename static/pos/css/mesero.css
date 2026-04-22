@@ -1,0 +1,873 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background: #f5f5f5;
+    height: 100vh;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+}
+
+.screen {
+    display: none;
+    height: 100vh;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: #f5f5f5;
+    flex-direction: column;
+}
+
+.screen.active {
+    display: flex;
+}
+
+/* Header */
+.header {
+    background: #1a472a;
+    color: white;
+    padding: 10px 16px;
+    flex-shrink: 0;
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.mesa-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.mesa-numero {
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.cambiar-mesa {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    cursor: pointer;
+}
+
+.orden-header-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    opacity: 0.9;
+    margin-top: 5px;
+}
+
+.orden-numero {
+    background: rgba(255,255,255,0.2);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+}
+
+.total-header {
+    background: #ffb74d;
+    color: #1a472a;
+    padding: 4px 12px;
+    border-radius: 30px;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+/* Botones de salir */
+.btn-logout {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-logout:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.02);
+}
+
+.btn-logout-small {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-logout-small:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+}
+
+/* Botón cambiar contraseña */
+.btn-password {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-password:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.02);
+}
+
+.btn-password-small {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Tabs principales */
+.main-tabs {
+    display: flex;
+    background: white;
+    border-bottom: 2px solid #e0e0e0;
+    flex-shrink: 0;
+}
+
+.main-tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.85rem;
+    background: #f5f5f5;
+    transition: all 0.2s;
+}
+
+.main-tab.active {
+    background: white;
+    color: #1a472a;
+    border-bottom: 3px solid #1a472a;
+}
+
+.tab-content {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.tab-content.active {
+    display: flex;
+}
+
+/* Categorías */
+.categorias-tabs {
+    display: flex;
+    overflow-x: auto;
+    gap: 6px;
+    padding: 10px 12px;
+    background: white;
+    border-bottom: 1px solid #e0e0e0;
+    flex-shrink: 0;
+}
+
+.categoria-tab {
+    padding: 6px 16px;
+    background: #f0f0f0;
+    border-radius: 30px;
+    white-space: nowrap;
+    cursor: pointer;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+
+.categoria-tab.active {
+    background: #1a472a;
+    color: white;
+}
+
+/* Lista de productos */
+.productos-container {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+}
+
+.producto-card {
+    background: white;
+    border-radius: 16px;
+    padding: 12px;
+    margin-bottom: 12px;
+    display: flex;
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: all 0.1s;
+    cursor: pointer;
+}
+
+.producto-card:active {
+    transform: scale(0.98);
+}
+
+.producto-imagen {
+    width: 70px;
+    height: 70px;
+    border-radius: 12px;
+    background-size: cover;
+    background-position: center;
+    background-color: #f0f0f0;
+    flex-shrink: 0;
+}
+
+.producto-info {
+    flex: 1;
+}
+
+.producto-nombre {
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+    color: #333;
+}
+
+.producto-descripcion {
+    font-size: 0.7rem;
+    color: #888;
+    margin-bottom: 6px;
+    line-height: 1.3;
+}
+
+.producto-precio {
+    color: #1a472a;
+    font-weight: bold;
+    font-size: 0.85rem;
+}
+
+.producto-cantidad-actual {
+    font-size: 0.65rem;
+    color: #ff9800;
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+.producto-actions {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    align-items: flex-end;
+}
+
+.btn-cantidad {
+    background: #f0f0f0;
+    border: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-cantidad.eliminar {
+    background: #ffebee;
+    color: #f44336;
+}
+
+.btn-multiple {
+    background: #e3f2fd;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.btn-multiple:active {
+    transform: scale(0.95);
+}
+
+.btn-group {
+    display: flex;
+    gap: 4px;
+}
+
+/* Lista de orden */
+.orden-lista {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+}
+
+.orden-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+    gap: 8px;
+}
+
+.item-info {
+    flex: 1;
+}
+
+.item-nombre {
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+.item-precio {
+    font-size: 0.65rem;
+    color: #888;
+}
+
+.item-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cantidad-btn {
+    background: #f0f0f0;
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.cantidad-btn.eliminar {
+    background: #ffebee;
+    color: #f44336;
+}
+
+.item-cantidad {
+    font-weight: bold;
+    min-width: 24px;
+    text-align: center;
+}
+
+.item-subtotal {
+    font-weight: bold;
+    color: #1a472a;
+    min-width: 60px;
+    text-align: right;
+    font-size: 0.85rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+    font-size: 0.8rem;
+}
+
+/* Botón fijo */
+.fixed-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    padding: 10px 16px;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    z-index: 100;
+}
+
+.btn-enviar {
+    background: #2e7d32;
+    color: white;
+    border: none;
+    width: 100%;
+    padding: 12px;
+    border-radius: 30px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.btn-enviar:active {
+    transform: scale(0.98);
+}
+
+.content-with-fixed-footer {
+    padding-bottom: 70px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Mesas - Grid responsiva para muchas mesas */
+.mesas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 85px));
+    gap: 10px;
+    padding: 16px;
+    width: 100%;
+}
+
+#mesasScreen {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+#mesasScreen .header {
+    flex-shrink: 0;
+}
+
+#mesasScreen .mesas-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    display: flex;
+    justify-content: center;
+}
+
+/* Scroll personalizado */
+.mesas-wrapper::-webkit-scrollbar {
+    width: 6px;
+}
+
+.mesas-wrapper::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.mesas-wrapper::-webkit-scrollbar-thumb {
+    background: #1a472a;
+    border-radius: 10px;
+}
+
+.mesas-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #0d2818;
+}
+
+
+/* Ajustar según el número de mesas */
+.mesas-grid.muchas-mesas {
+    grid-template-columns: repeat(auto-fill, minmax(60px, 70px));
+    gap: 8px;
+}
+
+.mesa-card {
+    background: white;
+    border-radius: 10px;
+    padding: 6px 2px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    position: relative;
+    min-width: 0;
+}
+
+.mesa-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: #1a472a;
+    border-radius: 10px 10px 0 0;
+}
+
+.mesa-card.ocupada::before {
+    background: #f44336;
+}
+
+.mesa-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.mesa-card.ocupada {
+    background: #fff5f5;
+    border: 1px solid #ffcdd2;
+}
+
+.mesa-card.libre {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+}
+
+.mesa-numero-grande {
+    font-size: 0.9rem;
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+.mesa-card.ocupada .mesa-numero-grande {
+    color: #f44336;
+}
+
+.mesa-card.libre .mesa-numero-grande {
+    color: #2e7d32;
+}
+
+.mesa-estado {
+    font-size: 0.55rem;
+    font-weight: 600;
+    padding: 2px 4px;
+    border-radius: 10px;
+    display: inline-block;
+}
+
+.mesa-card.ocupada .mesa-estado {
+    background: #f44336;
+    color: white;
+}
+
+.mesa-card.libre .mesa-estado {
+    background: #4caf50;
+    color: white;
+}
+
+.mesa-orden-info {
+    font-size: 0.5rem;
+    color: #666;
+    margin-top: 3px;
+    padding-top: 3px;
+    border-top: 1px solid rgba(0,0,0,0.05);
+    width: 100%;
+}
+
+.mesa-orden-numero {
+    font-weight: bold;
+    color: #ff9800;
+    font-size: 0.55rem;
+}
+
+/* Indicador visual */
+.mesa-card.ocupada::after {
+    content: '●';
+    position: absolute;
+    top: 3px;
+    right: 5px;
+    font-size: 0.5rem;
+    color: #f44336;
+}
+
+.mesa-card.libre::after {
+    content: '○';
+    position: absolute;
+    top: 3px;
+    right: 5px;
+    font-size: 0.5rem;
+    color: #4caf50;
+}
+
+/* Scroll para muchas mesas */
+.mesas-container {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;  /* Importante para flexbox */
+    width: 100%;
+}
+
+/* Responsive para diferentes cantidades de mesas */
+@media (min-width: 768px) {
+    .mesas-grid {
+        grid-template-columns: repeat(auto-fill, minmax(75px, 85px));
+        gap: 12px;
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .mesas-grid {
+        grid-template-columns: repeat(auto-fill, minmax(60px, 70px));
+        gap: 8px;
+        padding: 12px;
+    }
+
+    .mesa-numero-grande {
+        font-size: 0.8rem;
+    }
+
+    .mesa-estado {
+        font-size: 0.5rem;
+    }
+}
+
+/* Para tablets en horizontal */
+@media (min-width: 1024px) and (orientation: landscape) {
+    .mesas-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 90px));
+        gap: 14px;
+    }
+}
+
+/* Toast - versión corregida */
+.toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a472a;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    z-index: 1000;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    /* Eliminar la animación CSS */
+}
+
+/* Clase para ocultar el toast */
+.toast.hide {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+@keyframes fadeOut {
+    0% { opacity: 1; }
+    70% { opacity: 1; }
+    100% { opacity: 0; visibility: hidden; }
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+    .mesas-grid {
+        grid-template-columns: repeat(4, 1fr);
+        max-width: 450px;
+        gap: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .mesas-grid {
+        grid-template-columns: repeat(3, 1fr);
+        max-width: 300px;
+        gap: 10px;
+    }
+
+    .mesa-numero-grande {
+        font-size: 1rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .mesas-grid {
+        grid-template-columns: repeat(4, 1fr);
+        max-width: 500px;
+    }
+}
+
+/* Selector de menú - en la misma línea */
+.menu-selector-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 6px 12px;
+    margin: 8px 0 4px 0;
+    gap: 10px;
+}
+
+.menu-selector-container label {
+    font-size: 0.75rem;
+    opacity: 0.9;
+    white-space: nowrap;
+    margin: 0;
+}
+
+.menu-select {
+    background: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-family: inherit;
+    flex: 1;
+    max-width: 150px;
+}
+
+.menu-select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+/* Para pantallas pequeñas */
+@media (max-width: 480px) {
+    .menu-selector-container {
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .menu-select {
+        max-width: 100%;
+        flex: auto;
+    }
+}
+
+.mesa-card.mi-mesa {
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+}
+
+.mesa-card.mi-mesa .mesa-numero-grande {
+    color: #ff8f00;
+}
+
+.mesa-card.ocupada-otro {
+    background: #ffebee;
+    border: 1px solid #ffcdd2;
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.mesa-card.ocupada-otro .mesa-numero-grande {
+    color: #f44336;
+}
+
+/* Modal personalizado */
+.custom-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease;
+}
+
+.custom-modal-content {
+    background: white;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 320px;
+    overflow: hidden;
+    animation: slideIn 0.3s ease;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.custom-modal-header {
+    background: #1a472a;
+    color: white;
+    padding: 16px 20px;
+    text-align: center;
+}
+
+.custom-modal-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.custom-modal-body {
+    padding: 24px 20px;
+    text-align: center;
+    color: #333;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.custom-modal-footer {
+    display: flex;
+    border-top: 1px solid #eee;
+}
+
+.modal-btn {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.modal-cancel {
+    background: #f5f5f5;
+    color: #666;
+    border-right: 1px solid #eee;
+}
+
+.modal-cancel:hover {
+    background: #e0e0e0;
+}
+
+.modal-confirm {
+    background: #1a472a;
+    color: white;
+}
+
+.modal-confirm:hover {
+    background: #0d2818;
+}
+
+.modal-confirm.danger {
+    background: #f44336;
+}
+
+.modal-confirm.danger:hover {
+    background: #d32f2f;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+

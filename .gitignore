@@ -1,0 +1,14 @@
+/.idea/
+.vscode/
+*/__pycache__/*
+*.pyc
+staticfiles/
+
+media/productos/*
+!media/productos/.info
+
+cookies.txt
+
+*.log
+*.tmp
+

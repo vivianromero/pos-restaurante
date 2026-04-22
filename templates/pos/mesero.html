@@ -1,0 +1,122 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Mesero - Tomar Orden</title>
+    <link rel="stylesheet" href="{% static 'pos/css/mesero.css' %}">
+</head>
+<body>
+
+<!-- Pantalla de mesas -->
+<!-- Pantalla de mesas -->
+<div id="mesasScreen" class="screen active">
+    <div class="header">
+        <div class="header-top">
+            <div>
+                <h1 style="font-size: 1.1rem;">🍽️ Seleccionar Mesa</h1>
+                <div style="font-size: 0.65rem; opacity: 0.8; margin-top: 2px;">
+                    👤 {{ request.user.get_full_name|default:request.user.username }}
+                    {% if request.user.groups.all %}
+                        ({{ request.user.groups.first.name }})
+                    {% endif %}
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button class="btn-password" onclick="window.location.href='/cambiar-password/'" title="Cambiar Contraseña">🔐</button>
+                <button class="btn-logout" onclick="cerrarSesion()">🚪 Salir</button>
+            </div>
+        </div>
+        <div style="font-size: 0.65rem; opacity: 0.9; margin-top: 8px;">
+            Toca una mesa para comenzar - Total: <span id="totalMesasCount">0</span> mesas
+        </div>
+    </div>
+    <!-- Wrapper para scroll -->
+    <div class="mesas-wrapper" style="flex: 1; overflow-y: auto; min-height: 0;">
+        <div id="mesasGrid" class="mesas-grid"></div>
+    </div>
+</div>
+
+<!-- Pantalla principal -->
+<div id="menuScreen" class="screen">
+    <div class="header">
+        <div class="mesa-info">
+            <div>
+                <span class="mesa-numero" id="mesaNumero">Mesa #?</span>
+                <button class="cambiar-mesa" id="cambiarMesaBtn">Cambiar</button>
+            </div>
+            <div class="total-header" id="totalHeader">$0</div>
+        </div>
+        <div class="menu-selector-container" id="menuSelectorContainer" style="display: none;">
+            <label>📋 Tipo de Menú:</label>
+            <select id="selectorMenu" class="menu-select">
+                <option value="">Cargando...</option>
+            </select>
+        </div>
+        <div class="orden-header-info">
+            <div>
+                <span>🛒 Orden activa</span>
+                <div style="font-size: 0.65rem; opacity: 0.8; margin-top: 2px;">
+                    👤 {{ request.user.get_full_name|default:request.user.username }}
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <span class="orden-numero" id="ordenNumero">#001</span>
+                <button class="btn-logout-small" onclick="cerrarSesion()" title="Cerrar Sesión">🚪</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs principales -->
+    <div class="main-tabs">
+        <div class="main-tab active" data-tab="menu">📋 Menú</div>
+        <div class="main-tab" data-tab="orden">🛒 Orden <span id="tabOrdenCount">(0)</span></div>
+    </div>
+
+    <div class="content-with-fixed-footer">
+        <!-- Tab Menú -->
+        <div id="tabMenu" class="tab-content active">
+            <div class="categorias-tabs" id="categoriasTabs"></div>
+            <div class="productos-container" id="productosContainer"></div>
+        </div>
+
+        <!-- Tab Orden -->
+        <div id="tabOrden" class="tab-content">
+            <div id="ordenLista" class="orden-lista">
+                <div class="empty-state">✨ No hay productos</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="fixed-footer">
+        <button class="btn-enviar" id="enviarOrdenBtn">✅ Enviar orden a cocina</button>
+    </div>
+</div>
+
+<!-- Modal personalizado -->
+<div id="customModal" class="custom-modal" style="display: none;">
+    <div class="custom-modal-content">
+        <div class="custom-modal-header">
+            <h3 id="modalTitle">Confirmar</h3>
+        </div>
+        <div class="custom-modal-body">
+            <p id="modalMessage">¿Estás seguro de que deseas continuar?</p>
+        </div>
+        <div class="custom-modal-footer">
+            <button id="modalCancelBtn" class="modal-btn modal-cancel">Cancelar</button>
+            <button id="modalConfirmBtn" class="modal-btn modal-confirm">Aceptar</button>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'pos/js/config.js' %}"></script>
+<script src="{% static 'pos/js/utils.js' %}"></script>
+<script src="{% static 'pos/js/ui.js' %}"></script>
+<script src="{% static 'pos/js/api.js' %}"></script>
+<script src="{% static 'pos/js/orden.js' %}"></script>
+<script src="{% static 'pos/js/productos.js' %}"></script>
+<script src="{% static 'pos/js/mesas.js' %}"></script>
+<script src="{% static 'pos/js/main.js' %}"></script>
+</body>
+</html>
