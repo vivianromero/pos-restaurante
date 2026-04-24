@@ -1,7 +1,7 @@
 # apps/api/serializers/orden_serializer.py
 from rest_framework import serializers
-from apps.ordenes.models import Order, OrderItem, EstadoOrden, FormaPagoOrden
-from apps.administracion.models import MenuProduct, Table
+
+from apps.ordenes.models import Order, OrderItem, EstadoOrden
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -36,6 +36,7 @@ class OrdenSerializer(serializers.ModelSerializer):
     mesa_info = serializers.SerializerMethodField()
     puede_cobrar = serializers.SerializerMethodField()
     puede_editar = serializers.SerializerMethodField()
+    usuario_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
@@ -45,7 +46,7 @@ class OrdenSerializer(serializers.ModelSerializer):
             'forma_pago', 'forma_pago_label', 'importe_total', 'total',
             'total_formateado', 'items', 'cancelada', 'motivo_cancelacion',
             'efectivo_entregado', 'propina', 'porc_descuento',
-            'puede_cobrar', 'puede_editar'
+            'puede_cobrar', 'puede_editar', 'usuario_name'
         ]
         read_only_fields = ['numero_orden', 'importe_total']
 
@@ -72,6 +73,9 @@ class OrdenSerializer(serializers.ModelSerializer):
         Solo si no está pagada ni cancelada
         """
         return obj.estado not in [EstadoOrden.PAGADA] and not obj.cancelada
+
+    def get_usuario_name(self, obj):
+        return obj.usuario.username
 
 
 class OrdenCreateSerializer(serializers.Serializer):

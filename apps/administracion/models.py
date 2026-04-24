@@ -1,13 +1,13 @@
 import uuid
 from datetime import date
 
-from django.contrib.auth.models import AbstractUser
-from django.db import models
-from django.utils import timezone
-from django.db import transaction
 from PIL import Image
 from django.conf import settings
-import threading
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+from django.db import transaction
+from django.utils import timezone
+
 
 class IdModels(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -24,7 +24,6 @@ class DatosCacheManager(models.Manager):
 
     def clear_cache(self):
         self._cache = None
-
 
     class Meta:
         abstract = True
@@ -46,11 +45,6 @@ class ConfiguracionDiariaCacheManager(DatosCacheManager):
             )
             fechaprocesamiento.save()
         return fechaprocesamiento
-
-    # @transaction.atomic
-    # def get_fecha_procesamiento(self):
-    #     """Mantener compatibilidad con código existente"""
-    #     return self.get_cached_data()
 
     def get_cached_data(self):
         if self._cache is None:
@@ -136,12 +130,6 @@ class Product(IdModels):
 
     def __str__(self):
         return self.nombre
-
-    # def clean(self):
-    #     # Validar tamaño máximo de archivo (ejemplo: 2 MB)
-    #     max_size_mb = 2
-    #     if self.imagen and self.imagen.size > max_size_mb * 1024 * 1024:
-    #         raise ValidationError(f"La imagen no puede superar {max_size_mb} MB")
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

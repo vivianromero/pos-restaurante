@@ -1,6 +1,7 @@
 # apps/api/views/categoria_views.py
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
+
 from apps.administracion.models import Categoria
 from ..serializers.categoria_serializer import CategoriaSerializer
 

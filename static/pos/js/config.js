@@ -21,7 +21,7 @@ let menusDisponibles = [];
 let categorias = [];
 
 // Configuración del sistema
-let configuracion = {
+let configuracionSystem = {
     modulo_cocina_activo: false,
     modulo_caja_activo: true,
     pantalla_cocina_ip: null,

@@ -15,13 +15,13 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
-from django.contrib import admin
-from django.urls import path, include
-from django.shortcuts import redirect
-
-from apps.core.views import cambiar_password, custom_logout, MeseroView, CustomLoginView
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib import admin
+from django.shortcuts import redirect
+from django.urls import path, include
+
+from apps.core.views import cambiar_password, custom_logout, MeseroView, CustomLoginView, CocinaView
 
 urlpatterns = [
     path('', lambda request: redirect('login'), name='home'),
@@ -29,6 +29,7 @@ urlpatterns = [
     path('api/', include('apps.api.urls')),
     path('cambiar-password/', cambiar_password, name='cambiar_password'),
     path('mesero/', MeseroView.as_view(), name='mesero'),
+    path('cocina/', CocinaView.as_view(), name='cocina'),
     # path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('login/', CustomLoginView.as_view(), name='login'),
     path('logout/', custom_logout, name='logout'),

@@ -1,17 +1,16 @@
 // static/pos/js/main.js
 
 // Exponer funciones necesarias globalmente
-window.actualizarAmbosTabs = actualizarAmbosTabs;
-window.cerrarSesion = cerrarSesion;
+
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Iniciando POS Mesero...');
     console.log('Funciones disponibles:', {
         cargarMesasAPI: typeof cargarMesasAPI,
         cargarCategoriasAPI: typeof cargarCategoriasAPI,
         renderProductos: typeof renderProductos,
         renderOrdenLista: typeof renderOrdenLista,
-        actualizarAmbosTabs: typeof actualizarAmbosTabs
+        actualizarAmbosTabs: typeof actualizarAmbosTabs,
+        cargarConfiguracion: typeof cargarConfiguracion
     });
 
     cargarMesasAPI();

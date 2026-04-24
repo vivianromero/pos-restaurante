@@ -15,6 +15,7 @@ from .models import ConfiguracionSystem
 from .models import CustomUser
 from ..ordenes.models import Order, OrderItem
 
+
 @admin.register(ConfiguracionSystem)
 class ConfiguracionSystemAdmin(admin.ModelAdmin):
     """Configuración del sistema en el admin de Django"""

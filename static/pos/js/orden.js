@@ -39,26 +39,23 @@ function eliminarProducto(menuProductId) {
     }
 }
 
-
 function agregarProducto(menuProduct) {
-    console.log("🚀 agregarProducto LLAMADO");
-    console.log("  - Producto:", menuProduct?.producto_nombre);
-    console.log("  - ordenIdActual:", ordenIdActual);
+    if (!menuProduct) {
+        console.error("menuProduct es undefined");
+        return;
+    }
 
     const existente = ordenActual.find(i => i.menu_product_id === menuProduct.id);
 
     if (existente) {
-        console.log("  - Producto existente, nueva cantidad:", existente.cantidad);
         existente.cantidad++;
     } else {
-        console.log("  - Push Nuevo producto agregado");
         ordenActual.push({
             menu_product_id: menuProduct.id,
             nombre: menuProduct.producto_nombre || menuProduct.nombre,
             precio: parseFloat(menuProduct.precio),
             cantidad: 1
         });
-        console.log("  - Nuevo producto agregado");
     }
 
     actualizarUI();
@@ -68,12 +65,8 @@ function agregarProducto(menuProduct) {
         renderProductos();
     }
 
-    // Verificar si debe guardar
     if (ordenIdActual) {
-        console.log("  - ✅ Guardando cambios...");
         guardarCambiosOrden();
-    } else {
-        console.log("No hay ordenIdActual, no se guarda");
     }
 }
 
@@ -168,38 +161,6 @@ function renderOrdenLista() {
     });
 }
 
-function enviarOrden() {
-    if (ordenActual.length === 0) {
-        toast('⚠️ Debe agregar productos a la Orden');
-        return;
-    }
-
-    const ordenData = {
-        orden_numero: ordenNumeroActual,
-        mesa_id: mesaSeleccionada.id,
-        mesa_numero: mesaSeleccionada.numero,
-        productos: ordenActual.map(p => ({
-            menu_product_id: p.menu_product_id,
-            nombre: p.nombre,
-            cantidad: p.cantidad,
-            precio: p.precio,
-            subtotal: p.precio * p.cantidad
-        })),
-        total: ordenActual.reduce((s, i) => s + (i.precio * i.cantidad), 0),
-        fecha: new Date().toISOString()
-    };
-
-    toast(`✅ Orden #${formatearNumeroOrden(ordenNumeroActual)} enviada`);
-
-    setTimeout(() => {
-        ordenActual = [];
-        mesaSeleccionada = null;
-        document.getElementById('menuScreen').classList.remove('active');
-        document.getElementById('mesasScreen').classList.add('active');
-        cargarMesasAPI();
-    }, 1000);
-}
-
 async function cambiarMesa() {
     if (ordenActual.length > 0 && !ordenIdActual) {
         const confirmar = await mostrarModal({
@@ -246,15 +207,15 @@ function cambiarTab(tabId) {
     }
 }
 
-function cerrarSesion() {
-    window.location.href = '/logout/';
-}
 
 function actualizarBotonEnvio() {
     const btn = document.getElementById('enviarOrdenBtn');
     if (!btn) return;
 
-    if (configuracionsystem.modulo_cocina_activo) {
+    // Siempre habilitar al actualizar
+    btn.disabled = false;
+
+    if (configuracionSystem.modulo_cocina_activo === true) {
         btn.innerHTML = '👨‍🍳 Enviar a cocina';
         btn.classList.remove('btn-caja');
         btn.classList.add('btn-cocina');
@@ -266,39 +227,29 @@ function actualizarBotonEnvio() {
 }
 
 async function enviarOrden() {
-    console.log("enviarOrden llamado");
-    console.log("ordenIdActual:", ordenIdActual);
-    console.log("ordenEstadoActual:", ordenEstadoActual);
-    console.log("modulo_cocina_activo:", configuracion?.modulo_cocina_activo);
 
     // Caso 1: Orden ya existe y está en estado SERVIDA (3)
     if (ordenIdActual && ordenEstadoActual === 3) {
-        console.log("Caso 1: Orden servida, enviando a caja");
         await enviarACaja();
         return;
     }
 
     // Caso 2: Orden ya existe pero no está servida
     if (ordenIdActual) {
-        console.log("Caso 2: Orden ya existe pero no está servida");
-        toast('⚠️ Esta orden ya fue procesada');
+        toast('Esta orden ya fue procesada', tipo='warning');
         return;
     }
 
     // Caso 3: Orden nueva (sin ID)
     if (ordenActual.length === 0) {
-        toast('⚠️ Debe agregar productos a la orden');
+        toast('Debe agregar productos a la orden', tipo='warning');
         return;
     }
 
-    console.log("Caso 3: Creando nueva orden");
     await crearNuevaOrden();
 }
 
 async function crearNuevaOrden() {
-    console.log("=== crearNuevaOrden ===");
-    console.log("mesaSeleccionada:", mesaSeleccionada);
-    console.log("ordenActual:", ordenActual);
 
     const btn = document.getElementById('enviarOrdenBtn');
     const textoOriginal = btn.innerHTML;
@@ -313,8 +264,6 @@ async function crearNuevaOrden() {
         }))
     };
 
-    console.log("Enviando datos:", ordenData);
-
     try {
         const response = await fetch('/api/ordenes/', {
             method: 'POST',
@@ -327,17 +276,14 @@ async function crearNuevaOrden() {
         });
 
         const data = await response.json();
-        console.log("Respuesta:", data);
 
         if (response.ok && data.success) {
             ordenIdActual = data.data.id;
             ordenNumeroActual = data.data.numero_orden;
             ordenEstadoActual = data.data.estado;
 
-            console.log("Orden creada:", ordenIdActual, ordenNumeroActual, ordenEstadoActual);
-
-            if (configuracion.modulo_cocina_activo) {
-                toast(`✅ Orden #${data.data.numero_orden} enviada a cocina`);
+            if (configuracionSystem.modulo_cocina_activo) {
+                toast(`Orden #${data.data.numero_orden} enviada a cocina`);
                 btn.innerHTML = '⏳ En cocina...';
                 btn.disabled = true;
             } else {
@@ -351,14 +297,14 @@ async function crearNuevaOrden() {
             }
         } else {
             console.error("Error en respuesta:", data);
-            toast(`❌ ${data.error || data.errors || 'No se pudo crear la orden'}`);
+            toast(`${data.error || data.errors || 'No se pudo crear la orden'}`, tipo='error');
             btn.innerHTML = textoOriginal;
             btn.disabled = false;
         }
 
     } catch (error) {
         console.error("Error de red:", error);
-        toast('❌ Error al enviar la orden');
+        toast('Error al enviar la orden', tipo='error');
         btn.innerHTML = textoOriginal;
         btn.disabled = false;
     }
@@ -389,26 +335,25 @@ async function guardarCambiosOrden() {
         const data = await response.json();
 
         if (response.ok && data.success) {
-            toast("✅ Cambios guardados");
+            toast("Cambios guardados");
+            ordenEstadoActual = data.data.estado;
             actualizarUI();
             return true;
         } else {
-            toast(`❌ Error: ${data.error || 'No se pudieron guardar los cambios'}`);
+            toast(`Error: ${data.error || 'No se pudieron guardar los cambios'}`, tipo='error');
             return false;
         }
 
     } catch (error) {
-        toast("❌ Error al guardar los cambios");
+        toast("Error al guardar los cambios", tipo='error');
         return false;
     }
 }
 
 async function enviarACaja() {
-    console.log("=== enviarACaja ===");
-    console.log("ordenIdActual:", ordenIdActual);
 
     if (!ordenIdActual) {
-        toast('❌ No hay orden activa');
+        toast('No hay orden activa', tipo='warning');
         return;
     }
 
@@ -427,7 +372,6 @@ async function enviarACaja() {
         });
 
         const data = await response.json();
-        console.log("Respuesta enviarACaja:", data);
 
         if (response.ok && data.success) {
             toast(`💰 Orden #${ordenNumeroActual} enviada a caja`);
@@ -436,30 +380,60 @@ async function enviarACaja() {
                 limpiarYVolverMesas();
             }, 1500);
         } else {
-            toast(`❌ ${data.error || 'Error al enviar a caja'}`);
+            toast(`${data.error || 'Error al enviar a caja'}`, tipo='error');
             btn.innerHTML = '💰 Cobrar orden';
             btn.disabled = false;
         }
 
     } catch (error) {
         console.error("Error:", error);
-        toast('❌ Error al enviar a caja');
+        toast('Error al enviar a caja', tipo='error');
         btn.innerHTML = '💰 Cobrar orden';
         btn.disabled = false;
     }
 }
 
 function limpiarYVolverMesas() {
-    console.log("=== limpiarYVolverMesas ===");
 
+    //REINICIAR TODAS LAS VARIABLES
     ordenActual = [];
     mesaSeleccionada = null;
     ordenIdActual = null;
     ordenNumeroActual = null;
     ordenEstadoActual = null;
+
     actualizarUI();
 
     document.getElementById('menuScreen').classList.remove('active');
     document.getElementById('mesasScreen').classList.add('active');
     cargarMesasAPI();
+
+    setTimeout(() => {
+        if (typeof reconectarBotonEnviar === 'function') {
+            reconectarBotonEnviar();
+        }
+    }, 100);
 }
+
+function reconectarBotonEnviar() {
+    const btn = document.getElementById('enviarOrdenBtn');
+    if (!btn) {
+        return;
+    }
+
+    // HABILITAR EL BOTÓN
+    btn.disabled = false;
+
+    // Eliminar eventos anteriores
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
+
+    // Asignar evento
+    newBtn.onclick = function() {
+        enviarOrden();
+    };
+
+}
+
+window.reconectarBotonEnviar = reconectarBotonEnviar
+window.enviarOrden = enviarOrden;

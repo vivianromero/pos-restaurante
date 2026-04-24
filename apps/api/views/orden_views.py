@@ -1,14 +1,15 @@
 # apps/api/views/orden_views.py
+from django.core.exceptions import ValidationError
+from django.db import transaction
 from rest_framework import viewsets, status
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.db import transaction
-from apps.ordenes.models import Order, OrderItem, EstadoOrden
+
 from apps.administracion.models import ConfiguracionSystem, Table, MenuProduct
-from ..serializers.orden_serializer import OrdenSerializer, OrdenCreateSerializer
 from apps.core.utils import get_fecha_operacion_actual
-from django.core.exceptions import ValidationError
-from rest_framework.decorators import action
+from apps.ordenes.models import Order, OrderItem, EstadoOrden
+from ..serializers.orden_serializer import OrdenSerializer, OrdenCreateSerializer
 
 
 class OrdenViewSet(viewsets.ModelViewSet):
@@ -71,9 +72,9 @@ class OrdenViewSet(viewsets.ModelViewSet):
 
     def _crear_orden(self, usuario, mesa, items_data):
         """Método auxiliar para crear la orden y sus items"""
-        config = ConfiguracionSystem.objects.obtener()
+        config = ConfiguracionSystem.objects.get_cached_data()
 
-        estado_inicial = EstadoOrden.PROCESANDO if config.modulo_cocina_activo else EstadoOrden.PENDIENTEPAGO
+        estado_inicial = EstadoOrden.PENDIENTE if config.modulo_cocina_activo else EstadoOrden.PENDIENTEPAGO
 
         order = Order.objects.create(
             usuario=usuario,
@@ -190,4 +191,36 @@ class OrdenViewSet(viewsets.ModelViewSet):
             'success': True,
             'message': 'Orden actualizada correctamente',
             'data': serializer.data
+        })
+
+    @action(detail=True, methods=['post'], url_path='enviar-caja')
+    def enviar_caja(self, request, pk=None):
+        """
+        Enviar orden a caja
+        POST /api/ordenes/{id}/enviar-caja/
+        """
+        try:
+            order = self.get_object()
+        except Exception:
+            return Response({
+                'success': False,
+                'error': 'Orden no encontrada'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        # Verificar que la orden está en estado SERVIDA (3)
+        if order.estado != EstadoOrden.SERVIDA:
+            return Response({
+                'success': False,
+                'error': f'Solo se pueden enviar a caja órdenes en estado Servida. Estado actual: {order.get_estado_display()}'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Cambiar estado a PENDIENTEPAGO (4)
+        order.estado = EstadoOrden.PENDIENTEPAGO
+        order.save()
+
+        return Response({
+            'success': True,
+            'message': f'Orden #{order.numero_orden} enviada a caja',
+            'estado': order.estado,
+            'estado_label': order.get_estado_display()
         })

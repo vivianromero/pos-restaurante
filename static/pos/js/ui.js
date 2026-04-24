@@ -1,61 +1,5 @@
 // static/pos/js/ui.js
 
-// Toast notification
-function toast(msg, duracion = 3000) {
-    const t = document.createElement('div');
-    t.className = 'toast';
-    t.innerText = msg;
-    document.body.appendChild(t);
-
-    setTimeout(() => {
-        t.classList.add('hide');
-        setTimeout(() => t.remove(), 500);
-    }, duracion);
-}
-
-// Mostrar loading en mesas
-function mostrarLoadingMesas() {
-    const container = document.getElementById('mesasGrid');
-    if (container) {
-        container.innerHTML = `
-            <div class="loading-container">
-                <div class="spinner"></div>
-                <p>Cargando mesas...</p>
-            </div>
-        `;
-    }
-}
-
-function mostrarLoading() {
-
-    // Mostrar loading en el grid de mesas
-    const mesasGrid = document.getElementById('mesasGrid');
-    if (mesasGrid) {
-        mesasGrid.innerHTML = `
-            <div class="loading-container">
-                <div class="spinner"></div>
-                <p>Cargando...</p>
-            </div>
-        `;
-    }
-
-    // También puedes mostrar loading en otros contenedores si es necesario
-    const productosContainer = document.getElementById('productosContainer');
-    if (productosContainer) {
-        productosContainer.innerHTML = `
-            <div class="loading-container">
-                <div class="spinner"></div>
-                <p>Cargando productos...</p>
-            </div>
-        `;
-    }
-}
-
-function ocultarLoading() {
-    console.log("🔄 Ocultando loading...");
-    // No es necesario hacer nada específico, el contenido se reemplazará al renderizar
-}
-
 // Mostrar error en mesas
 function mostrarErrorMesas() {
     const container = document.getElementById('mesasGrid');
@@ -68,36 +12,6 @@ function mostrarErrorMesas() {
         `;
     }
 }
-
-// Actualizar UI de la orden
-function actualizarUI() {
-    const totalItems = ordenActual.reduce((s, i) => s + i.cantidad, 0);
-    const totalPrecio = ordenActual.reduce((s, i) => s + (i.precio * i.cantidad), 0);
-
-    document.getElementById('totalHeader').innerText = formatearPrecio(totalPrecio);
-    document.getElementById('tabOrdenCount').innerText = `(${totalItems})`;
-}
-
-function actualizarAmbosTabs() {
-
-    // Actualizar header siempre
-    actualizarUI();
-
-    // Actualizar datos internos sin importar qué tab está visible
-    // Los tabs se actualizarán cuando el usuario cambie a ellos
-
-    // Si el tab Orden está visible, actualizarlo
-    if (document.getElementById('tabOrden').classList.contains('active')) {
-        renderOrdenLista();
-    }
-
-    // Si el tab Menú está visible, actualizarlo
-    if (document.getElementById('tabMenu').classList.contains('active')) {
-        renderProductos();
-    }
-}
-
-// ui.js
 
 function mostrarModal(opciones) {
     return new Promise((resolve) => {
@@ -160,3 +74,100 @@ function mostrarModal(opciones) {
         modal.addEventListener('click', handleOutsideClick);
     });
 }
+// Mostrar loading en mesas
+function mostrarLoadingMesas() {
+    const container = document.getElementById('mesasGrid');
+    if (container) {
+        container.innerHTML = `
+            <div class="loading-container">
+                <div class="spinner"></div>
+                <p>Cargando mesas...</p>
+            </div>
+        `;
+    }
+}
+
+function mostrarLoading() {
+
+    // Mostrar loading en el grid de mesas
+    const mesasGrid = document.getElementById('mesasGrid');
+    if (mesasGrid) {
+        mesasGrid.innerHTML = `
+            <div class="loading-container">
+                <div class="spinner"></div>
+                <p>Cargando...</p>
+            </div>
+        `;
+    }
+
+    // También puedes mostrar loading en otros contenedores si es necesario
+    const productosContainer = document.getElementById('productosContainer');
+    if (productosContainer) {
+        productosContainer.innerHTML = `
+            <div class="loading-container">
+                <div class="spinner"></div>
+                <p>Cargando productos...</p>
+            </div>
+        `;
+    }
+}
+
+function ocultarLoading() {
+    console.log("🔄 Ocultando loading...");
+    // No es necesario hacer nada específico, el contenido se reemplazará al renderizar
+}
+
+// Actualizar UI de la orden
+function actualizarUI() {
+    const totalItems = ordenActual.reduce((s, i) => s + i.cantidad, 0);
+    const totalPrecio = ordenActual.reduce((s, i) => s + (i.precio * i.cantidad), 0);
+
+    document.getElementById('totalHeader').innerText = formatearPrecio(totalPrecio);
+    document.getElementById('tabOrdenCount').innerText = `(${totalItems})`;
+
+    actualizarEstadoOrden();
+}
+
+function actualizarEstadoOrden() {
+    const estadoSpan = document.getElementById('ordenEstado');
+    if (!estadoSpan) return;
+
+    // Si no hay orden creada (sin ID)
+    if (!ordenIdActual) {
+        estadoSpan.innerHTML = '🛒 Orden';
+        return;
+    }
+
+    // Mostrar estado según el valor numérico
+    const estados = {
+        1: '⏳ Pendiente',
+        2: '🍳 En preparación',
+        3: '✅ Servida',
+        4: '💰 Pendiente pago',
+        5: '✔️ Pagada'
+    };
+
+    const estadoTexto = estados[ordenEstadoActual] || '📋 Orden';
+    estadoSpan.innerHTML = `🛒 ${estadoTexto}`;
+}
+
+function actualizarAmbosTabs() {
+
+    // Actualizar header siempre
+    actualizarUI();
+
+    // Actualizar datos internos sin importar qué tab está visible
+    // Los tabs se actualizarán cuando el usuario cambie a ellos
+
+    // Si el tab Orden está visible, actualizarlo
+    if (document.getElementById('tabOrden').classList.contains('active')) {
+        renderOrdenLista();
+    }
+
+    // Si el tab Menú está visible, actualizarlo
+    if (document.getElementById('tabMenu').classList.contains('active')) {
+        renderProductos();
+    }
+}
+
+

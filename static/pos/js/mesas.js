@@ -53,7 +53,7 @@ function renderMesas(mesasData) {
             const puedeSeleccionar = card.dataset.puedeSeleccionar === 'true';
 
             if (!puedeSeleccionar) {
-                toast(`⚠️ ${card.querySelector('.mesa-estado')?.innerText || 'Mesa ocupada'}`);
+                toast(`${card.querySelector('.mesa-estado')?.innerText || 'Mesa ocupada'}`, tipo='info');
                 return;
             }
 
@@ -68,9 +68,16 @@ function renderMesas(mesasData) {
     });
 }
 
-
 async function seleccionarMesa(mesa) {
+
+    // REINICIAR VARIABLES ANTES DE CARGAR NUEVA ORDEN
+    ordenActual = [];
+    ordenIdActual = null;
+    ordenNumeroActual = null;
+    ordenEstadoActual = null;
+
     mesaSeleccionada = mesa;
+    cargarConfiguracion();
 
     // Si la mesa está ocupada por mí, cargar la orden existente
     if (mesa.estado === 'ocupada' && mesa.order_id) {
@@ -78,11 +85,6 @@ async function seleccionarMesa(mesa) {
         return;
     }
 
-    // Mesa libre: nueva orden
-    ordenActual = [];
-    ordenIdActual = null;
-    ordenNumeroActual = null;
-    ordenEstadoActual = null;
     actualizarUI();
 
     document.getElementById('mesasScreen').classList.remove('active');
@@ -91,18 +93,20 @@ async function seleccionarMesa(mesa) {
     document.getElementById('mesaNumero').innerText = `Mesa #${mesa.numero}`;
     document.getElementById('ordenNumero').innerText = '#---';
 
+    if (typeof reconectarBotonEnviar === 'function') {
+        reconectarBotonEnviar();
+    } else {
+        console.log("⚠️ reconectarBotonEnviar no está disponible");
+    }
+
     renderCategorias();
     cargarMenusAPI();
     cambiarTab('menu');
-    actualizarBotonEnvio();
+//    actualizarBotonEnvio();
 }
 
 async function cargarOrdenExistente(orderId) {
     try {
-        console.log("=== cargarOrdenExistente ===");
-        console.log("renderCategorias es función?", typeof renderCategorias);
-        console.log("cargarMenusAPI es función?", typeof cargarMenusAPI);
-        console.log("cambiarTab es función?", typeof cambiarTab);
 
         mostrarLoading();
 
@@ -167,7 +171,7 @@ async function cargarOrdenExistente(orderId) {
 
     } catch (error) {
         console.error("Error en cargarOrdenExistente:", error);
-        toast('❌ Error al cargar la orden: ' + error.message);
+        toast('Error al cargar la orden: ' + error.message, tipo='error');
     }
 }
 
@@ -184,17 +188,17 @@ function actualizarBotonPorEstado() {
         btn.onclick = () => enviarOrden();
     }
     // Orden en estado PROCESANDO (2) - en espera
-    else if (ordenEstadoActual === 2) {
+    else if (ordenEstadoActual === 2 || ordenEstadoActual === 1) {
         btn.innerHTML = '⏳ En cocina...';
         btn.disabled = true;
     }
     // Orden en estado PENDIENTEPAGO (1) - ya fue a caja
-    else if (ordenEstadoActual === 1) {
+    else if (ordenEstadoActual === 4) {
         btn.innerHTML = '💰 En caja...';
         btn.disabled = true;
     }
     // Orden pagada
-    else if (ordenEstadoActual === 4) {
+    else if (ordenEstadoActual === 5) {
         btn.innerHTML = '✅ Orden pagada';
         btn.disabled = true;
     }
