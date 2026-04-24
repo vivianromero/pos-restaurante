@@ -1,5 +1,7 @@
-from apps.administracion.models import ConfiguracionDiaria
 from datetime import date
+
+from apps.administracion.models import ConfiguracionDiaria
+
 
 def get_fecha_operacion_actual() -> date:
     """

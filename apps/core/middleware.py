@@ -1,8 +1,3 @@
-from django.shortcuts import redirect
-from django.shortcuts import render
-
-# apps/core/middleware.py
-from django.shortcuts import redirect
 from django.shortcuts import render
 
 

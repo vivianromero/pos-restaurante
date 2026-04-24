@@ -1,5 +1,6 @@
 # apps/api/serializers/categoria_serializer.py
 from rest_framework import serializers
+
 from apps.administracion.models import Categoria
 
 

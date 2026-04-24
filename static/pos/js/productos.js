@@ -63,9 +63,11 @@ function renderProductos() {
 }
 
 function handleProductClick(e) {
-    console.log("🖱️ handleProductClick - CLICK DETECTADO");
+
     const card = e.target.closest('.producto-card');
-    if (!card) return;
+    if (!card) {
+        return;
+    }
 
     const menuProductId = card.dataset.id;
     const producto = productos.find(p => p.id === menuProductId);
@@ -73,8 +75,11 @@ function handleProductClick(e) {
     if (e.target.classList.contains('btn-multiple')) {
         e.stopPropagation();
         const action = e.target.getAttribute('data-action');
-        if (action === 'mas1') agregarProducto(producto);
-        else if (action === 'mas5') agregarMultiples(producto, 5);
+        if (action === 'mas1') {
+            agregarProducto(producto);
+        } else if (action === 'mas5') {
+            agregarMultiples(producto, 5);
+        }
     } else if (e.target.classList.contains('btn-cantidad')) {
         e.stopPropagation();
         eliminarProducto(menuProductId);

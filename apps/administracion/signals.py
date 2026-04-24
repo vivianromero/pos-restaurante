@@ -1,12 +1,12 @@
-from django.db.models.signals import post_migrate, post_save, post_delete
-from django.contrib.auth.models import Group, Permission
-from django.contrib.auth import get_user_model
-from django.conf import settings
 from django.apps import apps
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group, Permission
+from django.db.models.signals import post_migrate, post_save, post_delete
 from django.dispatch import receiver
 from django.utils import timezone
-from .models import ConfiguracionDiaria, ConfiguracionSystem
+
 from . import GruposUsuarios, GRUPOS_PERMITIDOS
+from .models import ConfiguracionDiaria, ConfiguracionSystem
 
 User = get_user_model()
 
@@ -115,13 +115,15 @@ def crear_configuracion_inicial(sender, **kwargs):
             else:
                 print("✅ Configuración del sistema creada (sin usuario asignado)")
 
-@receiver([post_save, post_delete], sender=[ConfiguracionDiaria, ConfiguracionSystem])
+@receiver([post_save, post_delete], sender=ConfiguracionDiaria)
 def limpiar_cache_configuracion(sender, **kwargs):
     """Limpia la caché cuando se modifica ConfiguracionDiaria"""
-    if sender == ConfiguracionDiaria:
-        ConfiguracionDiaria.objects.clear_cache()
-    elif sender == ConfiguracionSystem:
-        ConfiguracionSystem.objects.clear_cache()
+    ConfiguracionDiaria.objects.clear_cache()
+
+@receiver([post_save, post_delete], sender=ConfiguracionSystem)
+def limpiar_cache_configuracionsystem(sender, **kwargs):
+    """Limpia la caché cuando se modifica ConfiguracionDiaria"""
+    ConfiguracionSystem.objects.clear_cache()
 
 
 

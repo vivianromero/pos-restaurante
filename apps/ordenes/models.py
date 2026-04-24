@@ -1,19 +1,21 @@
-from django.db import models
-from django.conf import settings
-from ..administracion.models import IdModels, MenuProduct, Table
-from django_choices_field import IntegerChoicesField
 from decimal import Decimal
-from django.core.exceptions import ValidationError
+
+from django.conf import settings
+from django.db import models
 from django.db import transaction
-from ..core.utils import get_fecha_operacion_actual
 from django.db.models import Sum, F
+from django_choices_field import IntegerChoicesField
+
+from ..administracion.models import IdModels, MenuProduct, Table
+from ..core.utils import get_fecha_operacion_actual
 
 
 class EstadoOrden(models.IntegerChoices):
-    PENDIENTEPAGO = 1, 'Pendiente de Pago'
-    PROCESANDO = 2, 'Procesando'
-    SERVIDA = 3, 'Servida'
-    PAGADA = 4, 'Pagada'
+    PENDIENTE = 1, 'Pendiente'           # Enviado a cocina, esperando preparación
+    PROCESANDO = 2, 'Procesando'          # En preparación
+    SERVIDA = 3, 'Servida'                # Listo para servir (comida en mesa)
+    PENDIENTEPAGO = 4, 'Pendiente de Pago' # Comida servida, esperando pago
+    PAGADA = 5, 'Pagada'                  # Pagado
 
 class FormaPagoOrden(models.IntegerChoices):
     EFECTIVO = 1, 'Efectivo'

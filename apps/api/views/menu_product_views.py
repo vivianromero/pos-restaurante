@@ -1,8 +1,10 @@
 # apps/api/views/menu_product_views.py
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
-from ..serializers.menu_product_serializer import MenuProductSerializer
+
 from apps.administracion.models import MenuProduct
+from ..serializers.menu_product_serializer import MenuProductSerializer
+
 
 class MenuProductViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]

@@ -1,26 +1,27 @@
 # apps/core/views.py
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from django.views.generic import TemplateView
-from django.utils.decorators import method_decorator
-from .decorators import es_mesero
 from django.contrib import messages
-from django.contrib.auth.forms import PasswordChangeForm
-from django.contrib.auth import update_session_auth_hash, logout
-
-from django.contrib.auth.views import LoginView
-from django.urls import reverse_lazy
 from django.contrib.auth import authenticate, login
+from django.contrib.auth import update_session_auth_hash, logout
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
-from apps.administracion import GRUPOS_PERMITIDOS, GruposUsuarios
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth.views import LoginView
+from django.shortcuts import render, redirect
+from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
+from django.views.generic import TemplateView
+
+from apps.administracion import GRUPOS_PERMITIDOS, GruposUsuarios, VALORES_POR_API_GRUPO
+from .decorators import es_mesero, es_cocina
 
 
 class CustomLoginView(LoginView):
     template_name = 'registration/login.html'
     authentication_form = AuthenticationForm
+    opcion = 'mesero'
 
     def get_success_url(self):
-        return reverse_lazy('mesero')
+        return reverse_lazy(self.opcion)
 
     def post(self, request, *args, **kwargs):
         form = self.get_form()
@@ -33,18 +34,25 @@ class CustomLoginView(LoginView):
                 # Verificar grupos permitidos
                 grupos_permitidos = GRUPOS_PERMITIDOS[:]
                 grupos_permitidos.remove(GruposUsuarios.CHOICE_GRUPOSUSUARIOS[GruposUsuarios.ADMINISTRADOR])
-                if user.groups.filter(name__in=grupos_permitidos).exists() or user.is_superuser:
+                grupo = user.groups.filter(name__in=grupos_permitidos).first()
+                if grupo:
+                    self.opcion = VALORES_POR_API_GRUPO.get(grupo.id)
                     login(request, user)
                     return redirect(self.get_success_url())
                 else:
                     messages.error(request, '❌ Acceso denegado. Tu usuario no tiene permisos para acceder al sistema.')
             else:
-                messages.error(request, '❌ Usuario o contraseña incorrectosssssssss')
+                messages.error(request, '❌ Usuario o contraseña incorrecto')
         return render(request, self.template_name, {'form': form})
+
 
 @method_decorator(es_mesero, name='dispatch')
 class MeseroView(TemplateView):
     template_name = 'pos/mesero.html'
+
+@method_decorator(es_cocina, name='dispatch')
+class CocinaView(TemplateView):
+    template_name = 'pos/cocina.html'
 
 @method_decorator(es_mesero, name='dispatch')
 class CambiarPasswordView(TemplateView):

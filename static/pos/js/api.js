@@ -163,17 +163,18 @@ async function cargarConfiguracion() {
 
         // La API devuelve un array, tomamos el primer elemento
         if (Array.isArray(data) && data.length > 0) {
-            configuracionsystem = data[0];
+            configuracionSystem = data[0];
         } else if (data.id) {
-            configuracionsystem = data;
+            configuracionSystem = data;
         }
+
 
         // Actualizar botón según configuración
         actualizarBotonEnvio();
 
     } catch (error) {
         // Usar valores por defecto
-        configuracionsystem = {
+        configuracionSystem = {
             modulo_cocina_activo: false,
             modulo_caja_activo: true
         };

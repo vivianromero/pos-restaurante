@@ -12,8 +12,6 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 import os
 
-from django.utils import timezone
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 # BASE_DIR = Path(__file__).resolve().parent.parent
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -162,6 +160,4 @@ HANDLER500 = 'django.views.defaults.server_error'
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/mesero/'
 # LOGOUT_REDIRECT_URL = '/login/'
-
-from .jazzmin_settings import *
 

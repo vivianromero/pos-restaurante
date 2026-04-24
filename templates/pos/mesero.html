@@ -10,7 +10,6 @@
 <body>
 
 <!-- Pantalla de mesas -->
-<!-- Pantalla de mesas -->
 <div id="mesasScreen" class="screen active">
     <div class="header">
         <div class="header-top">
@@ -56,7 +55,7 @@
         </div>
         <div class="orden-header-info">
             <div>
-                <span>🛒 Orden activa</span>
+                <span id="ordenEstado">🛒 Orden ?</span>
                 <div style="font-size: 0.65rem; opacity: 0.8; margin-top: 2px;">
                     👤 {{ request.user.get_full_name|default:request.user.username }}
                 </div>

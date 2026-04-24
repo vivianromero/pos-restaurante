@@ -1,5 +1,5 @@
 # apps/core/urls_names.py
-# apps/core/urls_names.py
+
 """
 Centralización de nombres de URLs para usar en decoradores y vistas
 """

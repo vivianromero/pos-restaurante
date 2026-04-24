@@ -13,4 +13,8 @@ class GruposUsuarios:
 
 GRUPOS_PERMITIDOS = [k for k in GruposUsuarios.CHOICE_GRUPOSUSUARIOS.values()]
 
-aa=2
+VALORES_POR_API_GRUPO = {
+    GruposUsuarios.MESEROS: "mesero",
+    GruposUsuarios.CAJEROS: "cajero",
+    GruposUsuarios.PROCESO_DE_ORDENES: "cocina",
+}

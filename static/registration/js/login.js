@@ -95,22 +95,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const passwordInput = document.getElementById('password');
 
     if (togglePassword && passwordInput) {
-        console.log('Botón encontrado, agregando evento...');
 
         togglePassword.addEventListener('click', function() {
-            console.log('Click en el botón');
 
             // Cambiar el tipo de input entre password y text
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
                 togglePassword.innerHTML = '🔓';
                 togglePassword.title = 'Ocultar contraseña';
-                console.log('Contraseña visible');
             } else {
                 passwordInput.type = 'password';
                 togglePassword.innerHTML = '🔒';
                 togglePassword.title = 'Mostrar contraseña';
-                console.log('Contraseña oculta');
             }
         });
     } else {

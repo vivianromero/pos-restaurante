@@ -1,7 +1,8 @@
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from decimal import Decimal
+
 from .models import OrderItem
+
 
 @receiver([post_save, post_delete], sender=OrderItem)
 def actualizar_importe_total(sender, instance, **kwargs):
