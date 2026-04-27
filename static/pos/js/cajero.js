@@ -73,6 +73,8 @@ async function cargarPendientes() {
         }
 
         const url = `/api/ordenes/?${params.toString()}`;
+        console.log(url);
+
         const response = await fetch(url, {
             method: 'GET',
             headers: {
@@ -85,6 +87,7 @@ async function cargarPendientes() {
         if (!response.ok) throw new Error(`Error ${response.status}`);
 
         const data = await response.json();
+        console.log(data);
 
         renderOrdenes(data);
         cargarResumen();
@@ -362,6 +365,7 @@ async function enviarCambioFecha(nuevaFecha, fechaFormateada) {
             toast(`✅ Fecha cambiada a ${fechaFormateada}`);
             document.getElementById('fechaOperacion').innerText = fechaFormateada;
 
+            await cargarFechaOperacion();
             cargarPendientes();
             cargarResumen();
         } else {

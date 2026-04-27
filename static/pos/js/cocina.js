@@ -27,7 +27,9 @@ async function cargarPedidos() {
         if (!response.ok) throw new Error(`Error ${response.status}`);
 
         const pedidos = await response.json();
+        renderPedidos(pedidos);
         cargarResumen();
+
 
     } catch (error) {
         console.error('❌ Error:', error);
