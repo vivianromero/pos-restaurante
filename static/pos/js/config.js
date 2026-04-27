@@ -30,3 +30,10 @@ let configuracionSystem = {
     impresora_nombre: null,
     copias_ticket: 1
 };
+
+//cajero
+let ordenSeleccionada = null;
+
+//fecha de operaciones
+let fecha_operacion_formateada = null;
+let fecha_operacion = null;

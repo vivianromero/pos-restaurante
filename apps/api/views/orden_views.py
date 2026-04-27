@@ -1,8 +1,13 @@
 # apps/api/views/orden_views.py
+import logging
+
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django_filters import rest_framework as filters
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -11,17 +16,174 @@ from apps.core.utils import get_fecha_operacion_actual
 from apps.ordenes.models import Order, OrderItem, EstadoOrden
 from ..serializers.orden_serializer import OrdenSerializer, OrdenCreateSerializer
 
+logger = logging.getLogger(__name__)
+
+
+# Configuración personalizada de paginación
+class OrdenPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'limit'
+    max_page_size = 100
+
+
+class OrdenFilter(filters.FilterSet):
+    """Filtros para Orden usando django-filter"""
+
+    # Filtros exactos
+    id = filters.UUIDFilter(field_name='id')
+    numero_orden = filters.CharFilter(field_name='numero_orden', lookup_expr='icontains')
+    fecha = filters.DateFilter(field_name='fecha_operacion')
+    fecha_desde = filters.DateFilter(field_name='fecha_operacion', lookup_expr='gte')
+    fecha_hasta = filters.DateFilter(field_name='fecha_operacion', lookup_expr='lte')
+    usuario_id = filters.NumberFilter(field_name='usuario__id')
+    usuario = filters.CharFilter(field_name='usuario__username', lookup_expr='icontains')
+    mesa = filters.NumberFilter(field_name='mesa__numero')
+    mesa_id = filters.UUIDFilter(field_name='mesa__id')
+    cancelada = filters.BooleanFilter(field_name='cancelada')
+    total_min = filters.NumberFilter(field_name='importe_total', lookup_expr='gte')
+    total_max = filters.NumberFilter(field_name='importe_total', lookup_expr='lte')
+
+    # Filtro especial para estado
+    estado = filters.NumberFilter(field_name='estado')
+    estado_label = filters.CharFilter(method='filter_estado_nombre')
+
+    def filter_estado_nombre(self, queryset, name, value):
+        """Filtrar por nombre de estado"""
+        estado_map = {
+            'pendiente': EstadoOrden.PENDIENTE,
+            'procesando': EstadoOrden.PROCESANDO,
+            'servida': EstadoOrden.SERVIDA,
+            'pendientepago': EstadoOrden.PENDIENTEPAGO,
+            'pagada': EstadoOrden.PAGADA,
+        }
+        estado_lower = value.lower()
+        if estado_lower in estado_map:
+            return queryset.filter(estado=estado_map[estado_lower].value)
+        return queryset
+
+    class Meta:
+        model = Order
+        fields = [
+            'id', 'numero_orden', 'fecha', 'fecha_desde', 'fecha_hasta',
+            'usuario_id', 'usuario', 'mesa', 'mesa_id', 'cancelada',
+            'estado', 'total_min', 'total_max'
+        ]
+
+    def filter_queryset(self, queryset):
+        """Aplicar filtros personalizados"""
+        queryset = super().filter_queryset(queryset)
+
+        # Excluir canceladas por defecto si no se especifica
+        cancelada_param = self.request.query_params.get('cancelada')
+        if cancelada_param is None:
+            queryset = queryset.filter(cancelada=False)
+
+        # Filtro estado_diferente
+        estado_diferente = self.request.query_params.get('estado_diferente')
+        if estado_diferente:
+            estado_map = {
+                'pendiente': EstadoOrden.PENDIENTE,
+                'procesando': EstadoOrden.PROCESANDO,
+                'servida': EstadoOrden.SERVIDA,
+                'pendientepago': EstadoOrden.PENDIENTEPAGO,
+                'pagada': EstadoOrden.PAGADA,
+            }
+            if estado_diferente.lower() in estado_map:
+                queryset = queryset.exclude(estado=estado_map[estado_diferente.lower()])
+            else:
+                raise ValidationError(f'Estado diferente inválido. Opciones: {list(estado_map.keys())}')
+
+        return queryset
+
 
 class OrdenViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = OrdenSerializer
+    queryset = Order.objects.all().select_related('mesa', 'usuario')
+    filter_backends = [filters.DjangoFilterBackend]
+    filterset_class = OrdenFilter
+    pagination_class = OrdenPagination
 
     def get_queryset(self):
-        return Order.objects.filter(cancelada=False).select_related(
-            'usuario', 'mesa'
-        ).prefetch_related(
-            'items__menu_product__producto'
-        )
+        """Optimizar queryset base"""
+        queryset = super().get_queryset()
+
+        # Prefetch condicional basado en parámetro
+        include_items = self.request.query_params.get('include_items', 'false').lower() == 'true'
+        if include_items:
+            queryset = queryset.prefetch_related(
+                'items__menu_product__producto'
+            )
+
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        """
+        Filtrar órdenes por múltiples parámetros
+        GET /api/ordenes/
+
+        Parámetros de filtro:
+        - id: UUID de la orden
+        - fecha: fecha exacta (YYYY-MM-DD)
+        - fecha_desde: fecha inicio (YYYY-MM-DD)
+        - fecha_hasta: fecha fin (YYYY-MM-DD)
+        - usuario: username del usuario
+        - usuario_id: ID del usuario
+        - estado: valor numérico del estado
+        - estado_label: pendiente/procesando/servida/pendientepago/pagada
+        - estado_diferente: excluir por nombre de estado
+        - mesa: número de mesa
+        - mesa_id: ID de mesa
+        - numero_orden: número de orden
+        - cancelada: true/false (por defecto false)
+        - total_min: monto mínimo
+        - total_max: monto máximo
+
+        Parámetros de control:
+        - include_items: true/false - incluir productos de la orden
+        - limit: número máximo de resultados
+        - offset: desplazamiento para paginación
+        - ordenar: campo para ordenar (ej: -fecha_creacion)
+        """
+        try:
+            # Obtener queryset con filtros aplicados automáticamente
+            queryset = self.filter_queryset(self.get_queryset())
+
+            # Ordenamiento
+            ordenar_por = request.query_params.get('ordenar', '-fecha_creacion')
+
+            # Validar campo de ordenamiento para evitar inyección SQL
+            allowed_fields = ['fecha_creacion', '-fecha_creacion', 'numero_orden',
+                              '-numero_orden', 'importe_total', '-importe_total',
+                              'fecha_operacion', '-fecha_operacion', 'mesa__numero']
+
+            if ordenar_por not in allowed_fields and not ordenar_por.lstrip('-') in allowed_fields:
+                ordenar_por = '-fecha_creacion'
+
+            queryset = queryset.order_by(ordenar_por)
+
+            # Paginación automática
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+
+            # Fallback para cuando no hay paginación (útil para exportaciones)
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+
+        except ValidationError as e:
+            return Response({
+                'success': False,
+                'error': str(e.detail[0] if hasattr(e, 'detail') else e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Error en list de órdenes: {str(e)}", exc_info=True)
+            return Response({
+                'success': False,
+                'error': 'Error al procesar la solicitud'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
@@ -76,38 +238,36 @@ class OrdenViewSet(viewsets.ModelViewSet):
 
         estado_inicial = EstadoOrden.PENDIENTE if config.modulo_cocina_activo else EstadoOrden.PENDIENTEPAGO
 
-        order = Order.objects.create(
-            usuario=usuario,
-            mesa=mesa,
-            fecha_operacion=get_fecha_operacion_actual(),
-            estado=estado_inicial
-        )
+        with transaction.atomic():
+            order = Order.objects.create(
+                usuario=usuario,
+                mesa=mesa,
+                fecha_operacion=get_fecha_operacion_actual(),
+                estado=estado_inicial
+            )
 
-        menu_product_ids = [item['menu_product_id'] for item in items_data]
-        menu_products = {
-            str(mp.id): mp for mp in MenuProduct.objects.filter(id__in=menu_product_ids)
-        }
+            menu_product_ids = [item['menu_product_id'] for item in items_data]
+            menu_products = MenuProduct.objects.filter(id__in=menu_product_ids).in_bulk()
 
-        order_items = []
-        for item_data in items_data:
-            mp_id = item_data['menu_product_id']
-            if mp_id not in menu_products:
-                raise ValidationError(f'Producto con ID {mp_id} no existe')
+            order_items = [
+                OrderItem(
+                    order=order,
+                    menu_product=menu_products[mp_id],
+                    cantidad=item_data.get('cantidad', 1),
+                    precio_unitario=menu_products[mp_id].precio
+                )
+                for item_data in items_data
+                if (mp_id := item_data['menu_product_id']) in menu_products
+            ]
+            if order_items:
+                OrderItem.objects.bulk_create(order_items)
+                # Recalcular subtotales
+                for item in order_items:
+                    item.subtotal = item.cantidad * item.precio_unitario
+                OrderItem.objects.bulk_update(order_items, ['subtotal'])
 
-            menu_product = menu_products[mp_id]
-            order_items.append(OrderItem(
-                order=order,
-                menu_product=menu_product,
-                cantidad=item_data.get('cantidad', 1),
-                precio_unitario=menu_product.precio
-            ))
-
-        if order_items:
-            OrderItem.bulk_create_with_subtotal(order_items)
-
-        # order.calcular_total()
-        order.save()
-
+            # order.calcular_total()
+            order.save()
         return order
 
     @action(detail=True, methods=['post'], url_path='actualizar-items')

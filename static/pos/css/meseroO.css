@@ -1,7 +1,21 @@
-/* static/pos/css/mesero.css */
-/* Estilos específicos de la pantalla del mesero */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
 
-/* Pantallas */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background: #f5f5f5;
+    height: 100vh;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+}
+
 .screen {
     display: none;
     height: 100vh;
@@ -17,7 +31,21 @@
     display: flex;
 }
 
-/* Información de mesa */
+/* Header */
+.header {
+    background: #1a472a;
+    color: white;
+    padding: 10px 16px;
+    flex-shrink: 0;
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
 .mesa-info {
     display: flex;
     justify-content: space-between;
@@ -63,6 +91,75 @@
     border-radius: 30px;
     font-weight: bold;
     font-size: 0.9rem;
+}
+
+/* Botones de salir */
+.btn-logout {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-logout:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.02);
+}
+
+.btn-logout-small {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-logout-small:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+}
+
+/* Botón cambiar contraseña */
+.btn-password {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-password:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.02);
+}
+
+.btn-password-small {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Tabs principales */
@@ -301,6 +398,13 @@
     font-size: 0.85rem;
 }
 
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+    font-size: 0.8rem;
+}
+
 /* Botón fijo */
 .fixed-footer {
     position: fixed;
@@ -325,22 +429,6 @@
     cursor: pointer;
 }
 
-.btn-enviar.btn-cocina {
-    background: #ff9800;
-}
-
-.btn-enviar.btn-cocina:hover {
-    background: #e68900;
-}
-
-.btn-enviar.btn-caja {
-    background: #2e7d32;
-}
-
-.btn-enviar.btn-caja:hover {
-    background: #1b5e20;
-}
-
 .btn-enviar:active {
     transform: scale(0.98);
 }
@@ -352,7 +440,7 @@
     flex-direction: column;
 }
 
-/* Mesas */
+/* Mesas - Grid responsiva para muchas mesas */
 .mesas-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(70px, 85px));
@@ -398,6 +486,8 @@
     background: #0d2818;
 }
 
+
+/* Ajustar según el número de mesas */
 .mesas-grid.muchas-mesas {
     grid-template-columns: repeat(auto-fill, minmax(60px, 70px));
     gap: 8px;
@@ -511,28 +601,105 @@
     color: #4caf50;
 }
 
-/* Estados especiales de mesa */
-.mesa-card.mi-mesa {
-    background: #fff8e1;
-    border: 1px solid #ffe082;
+/* Scroll para muchas mesas */
+.mesas-container {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;  /* Importante para flexbox */
+    width: 100%;
 }
 
-.mesa-card.mi-mesa .mesa-numero-grande {
-    color: #ff8f00;
+/* Responsive para diferentes cantidades de mesas */
+@media (min-width: 768px) {
+    .mesas-grid {
+        grid-template-columns: repeat(auto-fill, minmax(75px, 85px));
+        gap: 12px;
+        padding: 20px;
+    }
 }
 
-.mesa-card.ocupada-otro {
-    background: #ffebee;
-    border: 1px solid #ffcdd2;
-    opacity: 0.7;
-    cursor: not-allowed;
+@media (max-width: 480px) {
+    .mesas-grid {
+        grid-template-columns: repeat(auto-fill, minmax(60px, 70px));
+        gap: 8px;
+        padding: 12px;
+    }
+
+    .mesa-numero-grande {
+        font-size: 0.8rem;
+    }
+
+    .mesa-estado {
+        font-size: 0.5rem;
+    }
 }
 
-.mesa-card.ocupada-otro .mesa-numero-grande {
-    color: #f44336;
+/* Para tablets en horizontal */
+@media (min-width: 1024px) and (orientation: landscape) {
+    .mesas-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 90px));
+        gap: 14px;
+    }
 }
 
-/* Selector de menú */
+/* Toast - versión corregida */
+.toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a472a;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    z-index: 1000;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    /* Eliminar la animación CSS */
+}
+
+/* Clase para ocultar el toast */
+.toast.hide {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+@keyframes fadeOut {
+    0% { opacity: 1; }
+    70% { opacity: 1; }
+    100% { opacity: 0; visibility: hidden; }
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+    .mesas-grid {
+        grid-template-columns: repeat(4, 1fr);
+        max-width: 450px;
+        gap: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .mesas-grid {
+        grid-template-columns: repeat(3, 1fr);
+        max-width: 300px;
+        gap: 10px;
+    }
+
+    .mesa-numero-grande {
+        font-size: 1rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .mesas-grid {
+        grid-template-columns: repeat(4, 1fr);
+        max-width: 500px;
+    }
+}
+
+/* Selector de menú - en la misma línea */
 .menu-selector-container {
     display: flex;
     align-items: center;
@@ -568,33 +735,8 @@
     box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
 }
 
-/* ============================================
-   RESPONSIVE
-   ============================================ */
-
-@media (min-width: 768px) {
-    .mesas-grid {
-        grid-template-columns: repeat(auto-fill, minmax(75px, 85px));
-        gap: 12px;
-        padding: 20px;
-    }
-}
-
+/* Para pantallas pequeñas */
 @media (max-width: 480px) {
-    .mesas-grid {
-        grid-template-columns: repeat(auto-fill, minmax(60px, 70px));
-        gap: 8px;
-        padding: 12px;
-    }
-
-    .mesa-numero-grande {
-        font-size: 0.8rem;
-    }
-
-    .mesa-estado {
-        font-size: 0.5rem;
-    }
-
     .menu-selector-container {
         flex-wrap: wrap;
         gap: 5px;
@@ -606,23 +748,41 @@
     }
 }
 
-@media (min-width: 1024px) and (orientation: landscape) {
-    .mesas-grid {
-        grid-template-columns: repeat(auto-fill, minmax(80px, 90px));
-        gap: 14px;
+.mesa-card.mi-mesa {
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+}
+
+.mesa-card.mi-mesa .mesa-numero-grande {
+    color: #ff8f00;
+}
+
+.mesa-card.ocupada-otro {
+    background: #ffebee;
+    border: 1px solid #ffcdd2;
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.mesa-card.ocupada-otro .mesa-numero-grande {
+    color: #f44336;
+}
+
+
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
-
-.fecha-row {
-    margin-top: 8px;
-    padding-top: 6px;
-    border-top: 0px solid rgba(255, 255, 255, 0.2);
-}
-
-.header-buttons-group {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-}
-
 

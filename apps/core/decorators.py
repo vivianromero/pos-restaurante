@@ -1,9 +1,13 @@
 # apps/core/decorators.py
+from functools import wraps
+
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import AnonymousUser
+from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
+from rest_framework import status
 
 from apps.administracion import GruposUsuarios
 from .urls_names import ADMIN_LOGIN, LOGIN
@@ -71,6 +75,26 @@ def es_mesero(view_func=None, redirect_field_name=REDIRECT_FIELD_NAME,
         return actual_decorator(view_func)
     return actual_decorator
 
+def es_cajero(view_func=None, redirect_field_name=REDIRECT_FIELD_NAME,
+              login_url=None):
+    """
+    Decorador para verificar que el usuario sea específicamente CAJERO
+    (usuario autenticado que pertenece al grupo CAJEROS)
+    """
+    if login_url is None:
+        login_url = reverse_lazy(LOGIN)
+
+    actual_decorator = user_passes_test(
+        lambda u: u.is_authenticated and u.groups.filter(
+            name=GruposUsuarios.CHOICE_GRUPOSUSUARIOS[GruposUsuarios.CAJEROS]
+        ).exists(),
+        login_url=login_url,
+        redirect_field_name=redirect_field_name
+    )
+
+    if view_func:
+        return actual_decorator(view_func)
+    return actual_decorator
 
 # Versión como class decorator para usar con as_view()
 def mesero_required(view_class):
@@ -86,4 +110,37 @@ def admin_required(view_class):
     """
     return method_decorator(es_administrador, name='dispatch')(view_class)
 
+def cajero_required(view_class):
+    """
+    Decorador para clases basadas en vista (TemplateView, ListView, etc.)
+    """
+    return method_decorator(es_cajero, name='dispatch')(view_class)
 
+
+def es_cajero_api(view_func):
+    """
+    Decorador para API que verifica que el usuario sea CAJERO
+    Devuelve JSON en lugar de redirigir
+    """
+
+    @wraps(view_func)
+    def wrapper(self, request, *args, **kwargs):
+        # Verificar autenticación
+        if not request.user.is_authenticated:
+            return JsonResponse({
+                'success': False,
+                'error': 'No autenticado. Inicie sesión para continuar.'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        # Verificar grupo Cajeros
+        if not request.user.groups.filter(name='Cajeros').exists():
+            return JsonResponse({
+                'success': False,
+                'error': 'Acceso denegado. Solo usuarios del grupo "Cajeros" pueden realizar esta acción.',
+                'required_group': 'Cajeros',
+                'your_group': [g.name for g in request.user.groups.all()] or 'Sin grupo'
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        return view_func(self, request, *args, **kwargs)
+
+    return wrapper

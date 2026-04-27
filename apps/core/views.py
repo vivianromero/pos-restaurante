@@ -12,7 +12,7 @@ from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 
 from apps.administracion import GRUPOS_PERMITIDOS, GruposUsuarios, VALORES_POR_API_GRUPO
-from .decorators import es_mesero, es_cocina
+from .decorators import es_mesero, es_cocina, es_cajero
 
 
 class CustomLoginView(LoginView):
@@ -53,6 +53,10 @@ class MeseroView(TemplateView):
 @method_decorator(es_cocina, name='dispatch')
 class CocinaView(TemplateView):
     template_name = 'pos/cocina.html'
+
+@method_decorator(es_cajero, name='dispatch')
+class CajeroView(TemplateView):
+    template_name = 'pos/cajero.html'
 
 @method_decorator(es_mesero, name='dispatch')
 class CambiarPasswordView(TemplateView):

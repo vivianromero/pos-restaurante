@@ -4,4 +4,5 @@ from .menu_views import MenuViewSet
 from .menu_product_views import MenuProductViewSet
 from .configsystem_views import ConfiguracionSystemViewSet
 from .orden_views import OrdenViewSet
+from .cajero_views import CajeroViewSet
 from .cocina_views import CocinaViewSet

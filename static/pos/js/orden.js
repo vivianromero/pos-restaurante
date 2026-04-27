@@ -1,5 +1,21 @@
 // static/pos/js/orden.js
 
+document.addEventListener('DOMContentLoaded', async function() {
+    await cargarCategoriasAPI();
+    await cargarMesasAPI();
+
+    await cargarConfiguracion();
+    await actualizarBotonEnvio();
+    await cargarFechaOperacion();
+
+    document.getElementById('enviarOrdenBtn')?.addEventListener('click', enviarOrden);
+    document.getElementById('cambiarMesaBtn')?.addEventListener('click', cambiarMesa);
+
+    document.querySelectorAll('.main-tab').forEach(tab => {
+        tab.addEventListener('click', () => cambiarTab(tab.dataset.tab));
+    });
+});
+
 // Función auxiliar para actualizar ambos tabs
 function actualizarAmbosTabs() {
 
@@ -17,7 +33,7 @@ function actualizarAmbosTabs() {
     // Actualizar tab Menú si está visible
     if (tabMenu && tabMenu.classList.contains('active')) {
         if (typeof renderProductos === 'function') {
-            renderProductos();
+            renderProductosrenderProductos();
         } else {
             console.log('❌ renderProductos no es una función');
         }
@@ -163,7 +179,7 @@ function renderOrdenLista() {
 
 async function cambiarMesa() {
     if (ordenActual.length > 0 && !ordenIdActual) {
-        const confirmar = await mostrarModal({
+        const confirmar = await window.mostrarModal({
             title: 'Cambiar de mesa',
             message: '¿Cambiar de mesa? La orden actual se perderá.',
             confirmText: 'Cambiar',
@@ -207,24 +223,6 @@ function cambiarTab(tabId) {
     }
 }
 
-
-function actualizarBotonEnvio() {
-    const btn = document.getElementById('enviarOrdenBtn');
-    if (!btn) return;
-
-    // Siempre habilitar al actualizar
-    btn.disabled = false;
-
-    if (configuracionSystem.modulo_cocina_activo === true) {
-        btn.innerHTML = '👨‍🍳 Enviar a cocina';
-        btn.classList.remove('btn-caja');
-        btn.classList.add('btn-cocina');
-    } else {
-        btn.innerHTML = '💰 Cobrar directamente';
-        btn.classList.remove('btn-cocina');
-        btn.classList.add('btn-caja');
-    }
-}
 
 async function enviarOrden() {
 
@@ -286,6 +284,9 @@ async function crearNuevaOrden() {
                 toast(`Orden #${data.data.numero_orden} enviada a cocina`);
                 btn.innerHTML = '⏳ En cocina...';
                 btn.disabled = true;
+                setTimeout(() => {
+                    limpiarYVolverMesas();
+                }, 1500);
             } else {
                 // COCINA INACTIVA: Orden creada, mostrar mensaje y volver a mesas
                 toast(`💰 Orden #${data.data.numero_orden} enviada a caja`);
@@ -435,5 +436,254 @@ function reconectarBotonEnviar() {
 
 }
 
+async function cargarMenusAPI() {
+    try {
+        const response = await fetch('/api/menus/', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            credentials: 'same-origin'
+        });
+
+        if (!response.ok) throw new Error(`Error ${response.status}`);
+
+        const data = await response.json();
+
+        // Extraer menús
+        let menus = Array.isArray(data) ? data : (data.results || []);
+        menusDisponibles = menus;
+
+        if (menusDisponibles.length > 0 && !menuSeleccionado) {
+            menuSeleccionado = menusDisponibles[0].id;
+        }
+
+        mostrarSelectorMenu();
+
+        // ✅ Cargar productos DESPUÉS de tener el menú seleccionado
+        await cargarProductosAPI();
+
+    } catch (error) {
+        console.error("Error cargando menús:", error);
+        menusDisponibles = [
+            { id: '1', nombre: 'Desayuno' },
+            { id: '2', nombre: 'Almuerzo' },
+            { id: '3', nombre: 'Cena' }
+        ];
+        menuSeleccionado = '1';
+        mostrarSelectorMenu();
+        await cargarProductosAPI();
+    }
+}
+
+async function cargarProductosAPI() {
+    try {
+        mostrarLoading('productosContainer', 'Cargando productos');
+
+        let url = '/api/menu-productos/';
+        const params = new URLSearchParams();
+
+        if (menuSeleccionado) params.append('menu', menuSeleccionado);
+        if (categoriaActiva > 0) params.append('categoria', categoriaActiva);
+
+        if (params.toString()) url += `?${params.toString()}`;
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            credentials: 'same-origin'
+        });
+
+        if (!response.ok) throw new Error(`Error ${response.status}`);
+
+        const data = await response.json();
+        // ✅ Extraer productos (manejar paginación)
+        if (data && data.results) {
+            productos = data.results;
+        } else if (Array.isArray(data)) {
+            productos = data;
+        } else {
+            productos = [];
+        }
+        // ✅ Renderizar productos SOLO después de tener los datos
+        renderProductos();
+
+    } catch (error) {
+        console.error("Error cargando productos:", error);
+        const container = document.getElementById('productosContainer');
+        if (container) {
+            container.innerHTML = `
+                <div class="error-container">
+                    <p>❌ Error al cargar productos</p>
+                    <button class="retry-btn" onclick="cargarProductosAPI()">Reintentar</button>
+                </div>
+            `;
+        }
+    }
+}
+
+async function cargarMesasAPI() {
+    try {
+        mostrarLoading('mesasGrid', 'mesas');
+
+        const response = await fetch('/api/mesas/', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            credentials: 'same-origin'
+        });
+
+        if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+                window.location.href = '/login/';
+                return;
+            }
+            throw new Error(`Error ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+            renderMesas(data.data);
+        } else {
+            throw new Error('Error en la respuesta');
+        }
+
+    } catch (error) {
+        mostrarErrorMesas();
+    }
+}
+
+async function cargarCategoriasAPI() {
+    try {
+        const response = await fetch('/api/categorias/', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            credentials: 'same-origin'
+        });
+
+        if (!response.ok) throw new Error(`Error ${response.status}`);
+
+        const data = await response.json();
+
+        const categoriasData = Array.isArray(data) ? data : (data.results || []);
+        categorias = [
+            { id: 0, nombre: 'Todos', icono: '📋', nombre_completo: '📋 Todos' },
+            ...categoriasData
+        ];
+
+        renderCategorias();
+
+    } catch (error) {
+        categorias = [
+            { id: 0, nombre: 'Todos', icono: '📋', nombre_completo: '📋 Todos' }
+        ];
+        renderCategorias();
+    }
+}
+
+function renderCategorias() {
+    const container = document.getElementById('categoriasTabs');
+
+    if (!categorias || categorias.length === 0) {
+        container.innerHTML = '<div class="categoria-tab">Cargando...</div>';
+        return;
+    }
+
+    container.innerHTML = categorias.map(c => `
+        <div class="categoria-tab ${c.id === categoriaActiva ? 'active' : ''}" data-id="${c.id}">
+            ${c.nombre_completo || c.nombre}
+        </div>
+    `).join('');
+
+    document.querySelectorAll('.categoria-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            categoriaActiva = parseInt(tab.dataset.id);
+            renderCategorias();
+            cargarProductosAPI();
+        });
+    });
+}
+
+function actualizarBotonEnvio() {
+    const btn = document.getElementById('enviarOrdenBtn');
+    if (!btn) return;
+
+    // Siempre habilitar al actualizar
+    btn.disabled = false;
+
+    if (configuracionSystem.modulo_cocina_activo === true) {
+        btn.innerHTML = '👨‍🍳 Enviar a cocina';
+        btn.classList.remove('btn-caja');
+        btn.classList.add('btn-cocina');
+    } else {
+        btn.innerHTML = '💰 Cobrar directamente';
+        btn.classList.remove('btn-cocina');
+        btn.classList.add('btn-caja');
+    }
+}
+
+function actualizarUI() {
+    const totalItems = ordenActual.reduce((s, i) => s + i.cantidad, 0);
+    const totalPrecio = ordenActual.reduce((s, i) => s + (i.precio * i.cantidad), 0);
+
+    document.getElementById('totalHeader').innerText = formatearPrecio(totalPrecio);
+    document.getElementById('tabOrdenCount').innerText = `(${totalItems})`;
+
+    actualizarEstadoOrden();
+}
+
+function actualizarEstadoOrden() {
+    const estadoSpan = document.getElementById('ordenEstado');
+    if (!estadoSpan) return;
+
+    // Si no hay orden creada (sin ID)
+    if (!ordenIdActual) {
+        estadoSpan.innerHTML = '🛒 Orden';
+        return;
+    }
+
+    // Mostrar estado según el valor numérico
+    const estados = {
+        1: '⏳ Pendiente',
+        2: '🍳 En preparación',
+        3: '✅ Servida',
+        4: '💰 Pendiente pago',
+        5: '✔️ Pagada'
+    };
+
+    const estadoTexto = estados[ordenEstadoActual] || '📋 Orden';
+    estadoSpan.innerHTML = `🛒 ${estadoTexto}`;
+}
+
+function actualizarAmbosTabs() {
+
+    // Actualizar header siempre
+    actualizarUI();
+
+    // Actualizar datos internos sin importar qué tab está visible
+    // Actualizar datos internos sin importar qué tab está visible
+    // Los tabs se actualizarán cuando el usuario cambie a ellos
+
+    // Si el tab Orden está visible, actualizarlo
+    if (document.getElementById('tabOrden').classList.contains('active')) {
+        renderOrdenLista();
+    }
+
+    // Si el tab Menú está visible, actualizarlo
+    if (document.getElementById('tabMenu').classList.contains('active')) {
+        renderProductos();
+    }
+}
+ci
 window.reconectarBotonEnviar = reconectarBotonEnviar
 window.enviarOrden = enviarOrden;
