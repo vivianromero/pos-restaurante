@@ -1,30 +1,6 @@
 // static/pos/js/productos.js
 
-function renderCategorias() {
-    const container = document.getElementById('categoriasTabs');
-
-    if (!categorias || categorias.length === 0) {
-        container.innerHTML = '<div class="categoria-tab">Cargando...</div>';
-        return;
-    }
-
-    container.innerHTML = categorias.map(c => `
-        <div class="categoria-tab ${c.id === categoriaActiva ? 'active' : ''}" data-id="${c.id}">
-            ${c.nombre_completo || c.nombre}
-        </div>
-    `).join('');
-
-    document.querySelectorAll('.categoria-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            categoriaActiva = parseInt(tab.dataset.id);
-            renderCategorias();
-            cargarProductosAPI();
-        });
-    });
-}
-
 function renderProductos() {
-    // ✅ Eliminar la declaración duplicada
     const container = document.getElementById('productosContainer');
 
     if (!productos || productos.length === 0) {
@@ -58,8 +34,10 @@ function renderProductos() {
 
     // Event delegation
     const containerElement = document.getElementById('productosContainer');
-    containerElement.removeEventListener('click', handleProductClick);
-    containerElement.addEventListener('click', handleProductClick);
+    if (containerElement) {
+        containerElement.removeEventListener('click', handleProductClick);
+        containerElement.addEventListener('click', handleProductClick);
+    }
 }
 
 function handleProductClick(e) {

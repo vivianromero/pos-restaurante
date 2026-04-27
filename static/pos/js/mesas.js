@@ -69,15 +69,19 @@ function renderMesas(mesasData) {
 }
 
 async function seleccionarMesa(mesa) {
-
-    // REINICIAR VARIABLES ANTES DE CARGAR NUEVA ORDEN
+    // REINICIAR VARIABLES
     ordenActual = [];
     ordenIdActual = null;
     ordenNumeroActual = null;
     ordenEstadoActual = null;
 
     mesaSeleccionada = mesa;
-    cargarConfiguracion();
+
+    // Cargar configuración
+    if (typeof cargarConfiguracion === 'function') {
+        await cargarConfiguracion();
+    }
+    actualizarBotonEnvio();
 
     // Si la mesa está ocupada por mí, cargar la orden existente
     if (mesa.estado === 'ocupada' && mesa.order_id) {
@@ -95,20 +99,21 @@ async function seleccionarMesa(mesa) {
 
     if (typeof reconectarBotonEnviar === 'function') {
         reconectarBotonEnviar();
-    } else {
-        console.log("⚠️ reconectarBotonEnviar no está disponible");
     }
 
+    // ✅ Renderizar categorías
     renderCategorias();
-    cargarMenusAPI();
+
+    // ✅ Recargar menús (esto recargará productos)
+    await cargarMenusAPI();
+
     cambiarTab('menu');
-//    actualizarBotonEnvio();
 }
 
 async function cargarOrdenExistente(orderId) {
     try {
 
-        mostrarLoading();
+        mostrarLoading('mesasGrid', 'mesas');
 
         const url = `/api/ordenes/${orderId}/`;
         const response = await fetch(url, {

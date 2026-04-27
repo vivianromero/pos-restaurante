@@ -2,9 +2,18 @@
 
 let pedidoSeleccionado = null;
 
+// Inicializar
+document.addEventListener('DOMContentLoaded', async function() {
+    await cargarConfiguracion();
+    await cargarFechaOperacion();
+
+    cargarPedidos();
+    iniciarAutoRefresh();
+});
+
 async function cargarPedidos() {
     try {
-        mostrarLoading();
+        mostrarLoading('pedidosGrid', 'pedidos');
 
         const response = await fetch('/api/cocina/', {
             method: 'GET',
@@ -18,8 +27,6 @@ async function cargarPedidos() {
         if (!response.ok) throw new Error(`Error ${response.status}`);
 
         const pedidos = await response.json();
-
-        renderPedidos(pedidos);
         cargarResumen();
 
     } catch (error) {
@@ -47,7 +54,6 @@ async function cargarResumen() {
         document.getElementById('pendientesCount').innerText = data.pendientes || 0;
         document.getElementById('procesandoCount').innerText = data.procesando || 0;
         document.getElementById('servidasCount').innerText = data.servidas || 0;
-        document.getElementById('fechaOperacion').innerText = data.fecha_operacion;
 
     } catch (error) {
         console.error('Error cargando resumen:', error);
@@ -57,8 +63,8 @@ async function cargarResumen() {
 // Renderizar pedidos con botones según estado
 function renderPedidos(pedidos) {
     const container = document.getElementById('pedidosGrid');
-
-    if (!pedidos || pedidos.length === 0) {
+    // ✅ Verificar que pedidos es un array
+    if (!pedidos || !Array.isArray(pedidos) || pedidos.length === 0) {
         container.innerHTML = '<div class="empty-state">🍽️ No hay pedidos pendientes</div>';
         return;
     }
@@ -84,24 +90,24 @@ function renderPedidos(pedidos) {
         }
 
         return `
-             <div class="pedido-card" data-id="${pedido.id}" data-estado="${pedido.estado}">
+            <div class="pedido-card" data-id="${pedido.id}" data-estado="${pedido.estado}">
                 <div class="pedido-header">
                     <div class="pedido-header-row">
                         <div class="pedido-numero-wrapper">
                             <span class="carrito-emoji">🛒</span>
                             <span class="pedido-numero">#${pedido.numero_orden}</span>
                         </div>
-                        <span class="pedido-mesa">Mesa ${pedido.mesa_info?.numero || '?'}</span>
+                        <span class="pedido-mesa">Mesa ${pedido.mesa?.numero || pedido.mesa_info?.numero || '?'}</span>
                     </div>
                     <div class="pedido-header-row">
-                        <span class="pedido-usuario">${pedido.usuario_name || pedido.creado_por || 'Mesero'}</span>
+                        <span class="pedido-usuario">${pedido.usuario?.username || 'Mesero'}</span>
                         <span class="pedido-estado estado-${pedido.estado}">${pedido.estado_label || getEstadoLabel(pedido.estado)}</span>
                     </div>
                 </div>
                 <div class="linea-head"></div>
                 <div class="pedido-body">
                     <ul class="pedido-items">
-                        ${pedido.items.map(item => `
+                        ${(pedido.items || []).map(item => `
                             <li>
                                 <span class="item-nombre">${item.producto_nombre}</span>
                                 <span class="item-cantidad">x ${item.cantidad}</span>
@@ -110,7 +116,6 @@ function renderPedidos(pedidos) {
                         `).join('')}
                     </ul>
                 </div>
-
                 <div class="pedido-footer">
                     <div class="total-wrapper">
                         <span class="total-label">TOTAL</span>
@@ -192,17 +197,6 @@ async function servirPedido(pedidoId) {
     }
 }
 
-// Mostrar loading
-function mostrarLoading() {
-    const container = document.getElementById('pedidosGrid');
-    container.innerHTML = `
-        <div class="loading-container">
-            <div class="spinner"></div>
-            <p>Cargando pedidos...</p>
-        </div>
-    `;
-}
-
 // Mostrar error
 function mostrarError() {
     const container = document.getElementById('pedidosGrid');
@@ -231,12 +225,6 @@ function detenerAutoRefresh() {
         intervalId = null;
     }
 }
-
-// Inicializar
-document.addEventListener('DOMContentLoaded', function() {
-    cargarPedidos();
-    iniciarAutoRefresh();
-});
 
 window.addEventListener('beforeunload', function() {
     detenerAutoRefresh();

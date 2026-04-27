@@ -21,7 +21,9 @@ from django.contrib import admin
 from django.shortcuts import redirect
 from django.urls import path, include
 
-from apps.core.views import cambiar_password, custom_logout, MeseroView, CustomLoginView, CocinaView
+from apps.core.views import (cambiar_password, custom_logout, MeseroView, CustomLoginView, CocinaView,
+                             CajeroView)
+
 
 urlpatterns = [
     path('', lambda request: redirect('login'), name='home'),
@@ -30,6 +32,7 @@ urlpatterns = [
     path('cambiar-password/', cambiar_password, name='cambiar_password'),
     path('mesero/', MeseroView.as_view(), name='mesero'),
     path('cocina/', CocinaView.as_view(), name='cocina'),
+    path('cajero/', CajeroView.as_view(), name='cajero'),
     # path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('login/', CustomLoginView.as_view(), name='login'),
     path('logout/', custom_logout, name='logout'),
@@ -39,5 +42,5 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 

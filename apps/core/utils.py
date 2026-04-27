@@ -11,3 +11,12 @@ def get_fecha_operacion_actual() -> date:
 
     fecha = ConfiguracionDiaria.get_fecha_operacion()
     return fecha
+
+def cambiar_fecha_operacion(nueva_fecha: date) -> ConfiguracionDiaria:
+    """
+    Cambia la fecha de operación
+    """
+    config, created = ConfiguracionDiaria.objects.get_or_create(
+        fecha_operacion=nueva_fecha
+    )
+    return config

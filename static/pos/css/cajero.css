@@ -1,0 +1,425 @@
+/* static/pos/css/cajero.css */
+/* Estilos específicos de la pantalla del cajero */
+
+
+/* ============================================
+   CONTENEDOR PRINCIPAL
+   ============================================ */
+
+.cajero-container {
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+
+/* ============================================
+   GRID DE ÓRDENES - SCROLL GENERAL
+   ============================================ */
+
+.ordenes-grid {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+    align-content: start;
+}
+
+/* ============================================
+   TARJETA DE ORDEN - ALTURA FIJA CON SCROLL INTERNO
+   ============================================ */
+
+.orden-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border-left: 4px solid #ff9800;
+    display: flex;
+    flex-direction: column;
+    height: 200px;  /* Altura fija */
+}
+
+.orden-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Header - altura fija, no se encoge */
+.orden-header {
+    background: #fff8e1;
+    padding: 10px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.orden-numero {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #e65100;
+}
+
+.orden-mesa {
+    background: #ff9800;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+/* Body - con scroll si hay muchos items */
+.orden-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 12px;
+}
+
+/* Scroll personalizado para el body */
+.orden-body::-webkit-scrollbar {
+    width: 4px;
+}
+
+.orden-body::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 4px;
+}
+
+.orden-body::-webkit-scrollbar-thumb {
+    background: #1a472a;
+    border-radius: 4px;
+}
+
+.orden-items {
+    list-style: none;
+    margin: 0;
+}
+
+.orden-items li {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 0.75rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.orden-items li:last-child {
+    border-bottom: none;
+}
+
+.item-nombre {
+    font-weight: 500;
+    color: #333;
+    flex: 1;
+}
+
+.item-cantidad {
+    background: #f0f0f0;
+    padding: 0px 6px;
+    border-radius: 10px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+.item-precio {
+    font-weight: 500;
+    color: #1a472a;
+    margin-left: 8px;
+    min-width: 60px;
+    text-align: right;
+}
+
+/* Footer - altura fija, no se encoge */
+.orden-footer {
+    padding: 8px 12px;
+    background: #fafafa;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #eee;
+    flex-shrink: 0;
+}
+
+.orden-total {
+    font-weight: bold;
+    color: #1a472a;
+    font-size: 0.9rem;
+}
+
+.orden-pendiente {
+    font-size: 0.7rem;
+    color: #ff9800;
+    font-weight: 500;
+}
+
+/* Scrollbar personalizado para el grid general */
+.ordenes-grid::-webkit-scrollbar {
+    width: 8px;
+}
+
+.ordenes-grid::-webkit-scrollbar-track {
+    background: #e0e0e0;
+    border-radius: 4px;
+}
+
+.ordenes-grid::-webkit-scrollbar-thumb {
+    background: #1a472a;
+    border-radius: 4px;
+}
+
+/* Para Firefox */
+
+
+/* ============================================
+   SELECTOR DE FECHA
+   ============================================ */
+
+
+/* ============================================
+   MODALES (mantener igual)
+   ============================================ */
+
+.modal-info {
+    background: #f5f5f5;
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.modal-info p {
+    margin: 0;
+    font-size: 0.85rem;
+}
+
+.modal-items {
+    margin-bottom: 20px;
+}
+
+.modal-items h3 {
+    font-size: 1rem;
+    margin-bottom: 12px;
+    color: #333;
+}
+
+.modal-items-list {
+    list-style: none;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.modal-items-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.modal-items-list .item-nombre {
+    font-size: 0.85rem;
+}
+
+.modal-items-list .item-precio {
+    font-size: 0.8rem;
+    color: #1a472a;
+    font-weight: 500;
+}
+
+.modal-totales {
+    background: #fafafa;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.total-line {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 0.9rem;
+}
+
+.total-line.descuento {
+    color: #f44336;
+}
+
+.total-line.propina {
+    color: #2196f3;
+}
+
+.total-line.total {
+    font-weight: bold;
+    font-size: 1.1rem;
+    border-top: 1px solid #e0e0e0;
+    margin-top: 6px;
+    padding-top: 10px;
+    color: #1a472a;
+}
+
+.modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.descuento-section,
+.pago-section,
+.efectivo-section,
+.propina-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.descuento-section label,
+.pago-section label,
+.efectivo-section label,
+.propina-section label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    min-width: 100px;
+}
+
+.descuento-control {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.descuento-control input,
+.efectivo-section input,
+.propina-section input {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    width: 100px;
+}
+
+.forma-pago {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    background: white;
+    cursor: pointer;
+}
+
+.btn-aplicar {
+    background: #ff9800;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.btn-aplicar:hover {
+    background: #e68900;
+}
+
+.cambio-info {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    background: #e8f5e9;
+    border-radius: 8px;
+    color: #2e7d32;
+}
+
+.cambio-message {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #2e7d32;
+    margin-top: 12px;
+    text-align: center;
+}
+
+/* Modal de fecha */
+.fecha-modal-control {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px 0;
+}
+
+.fecha-modal-control label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.fecha-modal-input {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    width: 100%;
+    background-color: white;
+    cursor: pointer;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+    .ordenes-grid {
+        grid-template-columns: 1fr;
+        padding: 12px;
+        gap: 12px;
+    }
+
+    .orden-card {
+        height: 180px;
+    }
+
+    .modal-actions {
+        gap: 12px;
+    }
+
+    .descuento-section,
+    .pago-section,
+    .efectivo-section,
+    .propina-section {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .fecha-stat {
+        margin-left: 0;
+    }
+
+    .fecha-control {
+        flex-wrap: wrap;
+    }
+
+    .fecha-input {
+        width: 100px;
+    }
+}
+
+@media (max-width: 480px) {
+    .orden-card {
+        height: 160px;
+    }
+}
+
+
+
+

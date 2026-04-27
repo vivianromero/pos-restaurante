@@ -106,5 +106,6 @@ class CocinaViewSet(viewsets.ReadOnlyModelViewSet):
             'pendientes': resumen['pendiente'],
             'procesando': resumen['procesando'],
             'servidas': resumen['servidas'],
-            'fecha_operacion': fecha_operacion
+            'fecha_operacion': fecha_operacion,
+            'fecha_operacion_formateada': fecha_operacion.strftime('%d/%m/%Y')
         })

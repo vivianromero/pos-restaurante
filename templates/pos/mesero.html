@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Mesero - Tomar Orden</title>
+    <link rel="stylesheet" href="{% static 'pos/css/common.css' %}">
     <link rel="stylesheet" href="{% static 'pos/css/mesero.css' %}">
 </head>
 <body>
@@ -22,13 +23,16 @@
                     {% endif %}
                 </div>
             </div>
-            <div style="display: flex; gap: 8px;">
-                <button class="btn-password" onclick="window.location.href='/cambiar-password/'" title="Cambiar Contraseña">🔐</button>
-                <button class="btn-logout" onclick="cerrarSesion()">🚪 Salir</button>
+            <div class="header-buttons-group">
+                <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                    <button class="btn-password" onclick="window.location.href='/cambiar-password/'" title="Cambiar Contraseña">🔐</button>
+                    <button class="btn-logout" onclick="cerrarSesion()">🚪 Salir</button>
+                </div>
+                <div class="fecha-control stat fecha-stat fecha-row">
+                    <label>📅 Fecha de operación:</label>
+                    <span class="stat-value" id="fechaOperacion">-</span>
+                </div>
             </div>
-        </div>
-        <div style="font-size: 0.65rem; opacity: 0.9; margin-top: 8px;">
-            Toca una mesa para comenzar - Total: <span id="totalMesasCount">0</span> mesas
         </div>
     </div>
     <!-- Wrapper para scroll -->
@@ -43,7 +47,7 @@
         <div class="mesa-info">
             <div>
                 <span class="mesa-numero" id="mesaNumero">Mesa #?</span>
-                <button class="cambiar-mesa" id="cambiarMesaBtn">Cambiar</button>
+                <button class="cambiar-mesa" id="cambiarMesaBtn" onclick="cambiarMesa()">Cambiar</button>
             </div>
             <div class="total-header" id="totalHeader">$0</div>
         </div>
@@ -62,7 +66,8 @@
             </div>
             <div style="display: flex; gap: 8px; align-items: center;">
                 <span class="orden-numero" id="ordenNumero">#001</span>
-                <button class="btn-logout-small" onclick="cerrarSesion()" title="Cerrar Sesión">🚪</button>
+
+                <button class="btn-logout" onclick="cerrarSesion()">🚪 Salir</button>
             </div>
         </div>
     </div>
@@ -93,7 +98,6 @@
     </div>
 </div>
 
-<!-- Modal personalizado -->
 <div id="customModal" class="custom-modal" style="display: none;">
     <div class="custom-modal-content">
         <div class="custom-modal-header">
@@ -110,12 +114,14 @@
 </div>
 
 <script src="{% static 'pos/js/config.js' %}"></script>
+<script src="{% static 'pos/js/common.js' %}"></script>
 <script src="{% static 'pos/js/utils.js' %}"></script>
-<script src="{% static 'pos/js/ui.js' %}"></script>
-<script src="{% static 'pos/js/api.js' %}"></script>
 <script src="{% static 'pos/js/orden.js' %}"></script>
 <script src="{% static 'pos/js/productos.js' %}"></script>
 <script src="{% static 'pos/js/mesas.js' %}"></script>
-<script src="{% static 'pos/js/main.js' %}"></script>
+
+
+<!-- Modal personalizado -->
+
 </body>
 </html>

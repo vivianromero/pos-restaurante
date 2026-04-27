@@ -46,35 +46,35 @@ if (loginForm) {
     });
 }
 
-function mostrarError(mensaje) {
-    // Eliminar error anterior si existe
-    const errorExistente = document.querySelector('.error-message');
-    if (errorExistente && !errorExistente.id) {
-        errorExistente.remove();
-    }
-
-    // Crear nuevo mensaje de error
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'error-message';
-    errorDiv.innerHTML = `❌ ${mensaje}`;
-
-    // Insertar después del logo
-    const logo = document.querySelector('.logo');
-    if (logo && logo.parentNode) {
-        logo.parentNode.insertBefore(errorDiv, logo.nextSibling);
-    }
-
-    // Auto-ocultar después de 3 segundos
-    setTimeout(function() {
-        errorDiv.style.transition = 'opacity 0.5s ease';
-        errorDiv.style.opacity = '0';
-        setTimeout(function() {
-            if (errorDiv && errorDiv.parentNode) {
-                errorDiv.remove();
-            }
-        }, 500);
-    }, 3000);
-}
+//function mostrarError(mensaje) {
+//    // Eliminar error anterior si existe
+//    const errorExistente = document.querySelector('.error-message');
+//    if (errorExistente && !errorExistente.id) {
+//        errorExistente.remove();
+//    }
+//
+//    // Crear nuevo mensaje de error
+//    const errorDiv = document.createElement('div');
+//    errorDiv.className = 'error-message';
+//    errorDiv.innerHTML = `❌ ${mensaje}`;
+//
+//    // Insertar después del logo
+//    const logo = document.querySelector('.logo');
+//    if (logo && logo.parentNode) {
+//        logo.parentNode.insertBefore(errorDiv, logo.nextSibling);
+//    }
+//
+//    // Auto-ocultar después de 3 segundos
+//    setTimeout(function() {
+//        errorDiv.style.transition = 'opacity 0.5s ease';
+//        errorDiv.style.opacity = '0';
+//        setTimeout(function() {
+//            if (errorDiv && errorDiv.parentNode) {
+//                errorDiv.remove();
+//            }
+//        }, 500);
+//    }, 3000);
+//}
 
 // Agregar efecto de focus a los inputs
 const inputs = document.querySelectorAll('input');

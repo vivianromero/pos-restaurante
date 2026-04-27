@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Cocina - POS Restaurante</title>
+    <link rel="stylesheet" href="{% static 'pos/css/common.css' %}">
     <link rel="stylesheet" href="{% static 'pos/css/cocina.css' %}">
 </head>
 <body>
@@ -15,6 +16,7 @@
                 <h1>👨‍🍳 Pantalla de Cocina</h1>
                 <div class="header-buttons">
                     <button class="btn-refresh" onclick="cargarPedidos()">♻️ Actualizar</button>
+                    <button class="btn-password" onclick="window.location.href='/cambiar-password/'" title="Cambiar Contraseña">🔐</button>
                     <button class="btn-logout" onclick="cerrarSesion()">🚪 Salir</button>
                 </div>
             </div>
@@ -24,16 +26,18 @@
                     <span class="stat-value" id="pendientesCount">0</span>
                 </div>
                 <div class="stat">
-                    <span class="stat-label">🍳 En preparación:</span>
+                    <span class="stat-label">‍🔥 En preparación:</span>
                     <span class="stat-value" id="procesandoCount">0</span>
                 </div>
                 <div class="stat">
-                    <span class="stat-label">✅ Servidas:</span>
+                    <span class="stat-label">🍽️ Servidas:</span>
                     <span class="stat-value" id="servidasCount">0</span>
                 </div>
-                <div class="stat">
-                    <span class="stat-label">📅 Fecha:</span>
-                    <span class="stat-value" id="fechaOperacion">-</span>
+                <div class="stat fecha-stat">
+                    <div class="fecha-control">
+                        <label>📅 Fecha de operación:</label>
+                        <span class="stat-value" id="fechaOperacion">-</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -59,7 +63,9 @@
         </div>
     </div>
 
+    <script src="{% static 'pos/js/config.js' %}"></script>
     <script src="{% static 'pos/js/utils.js' %}"></script>
+    <script src="{% static 'pos/js/common.js' %}"></script>
     <script src="{% static 'pos/js/cocina.js' %}"></script>
 </body>
 </html>
