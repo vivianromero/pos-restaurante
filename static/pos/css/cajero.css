@@ -188,17 +188,6 @@
    MODALES (mantener igual)
    ============================================ */
 
-.modal-info {
-    background: #f5f5f5;
-    padding: 12px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
 .modal-info p {
     margin: 0;
     font-size: 0.85rem;
@@ -419,6 +408,227 @@
         height: 160px;
     }
 }
+
+/* Estilos para el modal de pago */
+
+.productos-scroll {
+    max-height: 250px;
+    overflow-y: auto;
+    margin-bottom: 16px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+}
+
+.productos-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.productos-tabla th {
+    background: #2c7da0;
+    color: white;
+    padding: 10px;
+    position: sticky;
+    top: 0;
+    text-align: center;
+}
+
+.productos-tabla td {
+    padding: 8px 10px;
+    text-align: center;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.campo-pago {
+    margin-bottom: 15px;
+}
+
+.campo-pago label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #343a40;
+    font-size: 14px;
+}
+
+.campo-pago input, .campo-pago select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.campo-pago input:focus, .campo-pago select:focus {
+    outline: none;
+    border-color: #2c7da0;
+}
+
+.total-mostrado {
+    background: #e9ecef;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: bold;
+    margin: 12px 0;
+    font-size: 16px;
+    color: #dc3545;
+}
+
+
+.devolucion.faltante {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.monto-entregado-group {
+    transition: all 0.3s;
+}
+
+hr {
+    margin: 15px 0;
+    border: none;
+    border-top: 1px solid #e9ecef;
+}
+
+.modal-info-left {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.modal-info-left p {
+    margin: 0;
+}
+
+.modal-info-right {
+    margin-left: auto;
+}
+
+.modal-info-right p {
+    margin: 0;
+}
+
+.modal-info-right strong {
+    color: #2c7da0;
+}
+
+.modal-info-right span {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #1a5d7a;
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+
+.resumen-box {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+}
+
+.total {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #dc3545;
+}
+
+.devolucion {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #28a745;
+}
+
+.modal-info {
+    display: flex;
+    justify-content: space-between;
+    background: #f1f3f5;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 0.95rem;
+}
+
+.botones-pago {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-guardar {
+    flex: 1;
+    background: #16a34a;
+    border: none;
+    padding: 12px;
+    color: white;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.btn-cerrar-orden {
+    flex: 1;
+    background: #dc2626;
+    border: none;
+    padding: 12px;
+    color: white;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+/* Tablets */
+@media (max-width: 992px) {
+    .grid-3 {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* Móviles */
+@media (max-width: 576px) {
+    .grid-2,
+    .grid-3 {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-content-pago {
+        width: 95%;
+        margin: 10px auto;
+    }
+
+    .modal-header h2 {
+        font-size: 1.1rem;
+    }
+
+    .resumen-box {
+        text-align: left;
+    }
+
+    .total,
+    .devolucion {
+        font-size: 1.2rem;
+    }
+
+    .botones-pago {
+        flex-direction: column;
+    }
+}
+
+.modal-content-pago {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
 
 
 

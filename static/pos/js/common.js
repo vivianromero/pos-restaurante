@@ -134,3 +134,5 @@ async function cargarConfiguracion() {
         };
     }
 }
+
+

@@ -347,6 +347,7 @@ async function guardarCambiosOrden() {
 
     } catch (error) {
         toast("Error al guardar los cambios", tipo='error');
+        console.log(error);
         return false;
     }
 }
@@ -684,6 +685,6 @@ function actualizarAmbosTabs() {
         renderProductos();
     }
 }
-ci
+
 window.reconectarBotonEnviar = reconectarBotonEnviar
 window.enviarOrden = enviarOrden;

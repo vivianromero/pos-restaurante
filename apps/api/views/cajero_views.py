@@ -159,8 +159,8 @@ class CajeroViewSet(viewsets.ReadOnlyModelViewSet):
         # Actualizar orden
         order.forma_pago = forma_pago
         order.propina = propina
-        if forma_pago == FormaPagoOrden.EFECTIVO:
-            order.efectivo_entregado = efectivo_entregado
+        # if forma_pago == FormaPagoOrden.EFECTIVO:
+        #     order.efectivo_entregado = efectivo_entregado
         order.estado = EstadoOrden.PAGADA
         order.save()
 

@@ -31,7 +31,7 @@ class Order(IdModels):
     cancelada = models.BooleanField(default=False, db_index=True)
     motivo_cancelacion = models.TextField(blank=True, null=True)
     forma_pago = IntegerChoicesField(choices_enum=FormaPagoOrden, verbose_name='Forma de Pago', default=FormaPagoOrden.EFECTIVO)
-    efectivo_entregado = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Efectivo entregado', default=0.00)
+    # efectivo_entregado = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Efectivo entregado', default=0.00)
     propina = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Propina Recibida', default=0.00)
     importe_total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, editable=False)
     porc_descuento = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, verbose_name='% Descuento')
@@ -49,25 +49,20 @@ class Order(IdModels):
     def __str__(self):
         return f"Orden #{self.id} - Mesa {self.mesa.numero} - {self.usuario.username}"
 
-    def calcula_cambio(self):
+    @property
+    def monto_descuento(self):
         """
-        Calcula el cambio a devolver al cliente si la forma de pago es efectivo.
+        Calcula el monto del descuento aplicado
+        Returns: Decimal con el valor del descuento
         """
-        if self.forma_pago == FormaPagoOrden.EFECTIVO:
-            total = self.importe_total()
-            cambio = self.efectivo_entregado - total
-            return cambio if cambio >= 0 else Decimal("0.00")
-        return Decimal("0.00")
+        descuento = (self.importe_total * self.porc_descuento) / 100
+        return descuento.quantize(Decimal('0.00'))
 
+    @property
+    def total_apagar(self):
+        """Calcula total a pagar basado en importe_total y monto a descontar"""
 
-    def calcular_total(self):
-        """Calcula el total basado en los items y descuentos"""
-        total = self.items.aggregate(
-            total=Sum(F('cantidad') * F('precio_unitario'))
-        )['total'] or Decimal('0')
-
-        self.importe_total = total * (Decimal('1') - Decimal(self.porc_descuento) / Decimal('100'))
-        return self.importe_total
+        return self.importe_total - self.monto_descuento
 
     def generar_numero_orden(self):
         mesa_numero = self.mesa.numero
@@ -86,7 +81,9 @@ class Order(IdModels):
             self.numero_orden = self.generar_numero_orden()
 
         # if obj and obj.porc_descuento != self.porc_descuento:
-        self.calcular_total()
+        self.importe_total = self.items.aggregate(
+            total=Sum(F('cantidad') * F('precio_unitario'))
+        )['total'] or Decimal('0')
 
         super().save(*args, **kwargs)
 

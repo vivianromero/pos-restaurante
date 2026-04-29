@@ -45,8 +45,9 @@ class OrdenSerializer(serializers.ModelSerializer):
             'fecha_creacion', 'fecha_operacion', 'estado', 'estado_label',
             'forma_pago', 'forma_pago_label', 'importe_total', 'total',
             'total_formateado', 'items', 'cancelada', 'motivo_cancelacion',
-            'efectivo_entregado', 'propina', 'porc_descuento',
-            'puede_cobrar', 'puede_editar', 'usuario_name'
+            'propina', 'porc_descuento',
+            'puede_cobrar', 'puede_editar', 'usuario_name', 'monto_descuento',
+            'total_apagar'
         ]
         read_only_fields = ['numero_orden', 'importe_total']
 

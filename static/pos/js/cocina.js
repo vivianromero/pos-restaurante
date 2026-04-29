@@ -66,12 +66,21 @@ async function cargarResumen() {
 function renderPedidos(pedidos) {
     const container = document.getElementById('pedidosGrid');
     // ✅ Verificar que pedidos es un array
-    if (!pedidos || !Array.isArray(pedidos) || pedidos.length === 0) {
+    console.log(pedidos);
+     const listaPedidos = pedidos.results || pedidos;
+
+    // ✅ Verificar que listaPedidos es un array
+    if (!listaPedidos || !Array.isArray(listaPedidos) || listaPedidos.length === 0) {
         container.innerHTML = '<div class="empty-state">🍽️ No hay pedidos pendientes</div>';
         return;
     }
+    container.innerHTML = listaPedidos.map(pedido => {
+        // Obtener número de mesa correctamente
+        const numeroMesa = pedido.mesa_info?.numero || pedido.mesa?.numero || '?';
 
-    container.innerHTML = pedidos.map(pedido => {
+        // Obtener nombre del usuario
+        const nombreUsuario = pedido.usuario_name || pedido.usuario?.username || 'Mesero';
+
         // Determinar qué botón mostrar según el estado
         let botones = '';
 
@@ -92,17 +101,17 @@ function renderPedidos(pedidos) {
         }
 
         return `
-            <div class="pedido-card" data-id="${pedido.id}" data-estado="${pedido.estado}">
+            <div class="pedido-card" data-id="${pedido.id}" data-estado="${pedido.estado}" onclick="abrirModalPago('${pedido.id}')">
                 <div class="pedido-header">
                     <div class="pedido-header-row">
                         <div class="pedido-numero-wrapper">
                             <span class="carrito-emoji">🛒</span>
                             <span class="pedido-numero">#${pedido.numero_orden}</span>
                         </div>
-                        <span class="pedido-mesa">Mesa ${pedido.mesa?.numero || pedido.mesa_info?.numero || '?'}</span>
+                        <span class="pedido-mesa">Mesa ${numeroMesa}</span>
                     </div>
                     <div class="pedido-header-row">
-                        <span class="pedido-usuario">${pedido.usuario?.username || 'Mesero'}</span>
+                        <span class="pedido-usuario">${nombreUsuario}</span>
                         <span class="pedido-estado estado-${pedido.estado}">${pedido.estado_label || getEstadoLabel(pedido.estado)}</span>
                     </div>
                 </div>

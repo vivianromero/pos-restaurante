@@ -1,8 +1,5 @@
 /* static/pos/css/cocina.css */
 /* Estilos específicos de la pantalla de cocina */
-/* static/pos/css/cocina.css */
-
-/* static/pos/css/cocina.css */
 
 .cocina-container {
     height: 100vh;
@@ -21,27 +18,18 @@
     align-items: start;
 }
 
+/* Tarjetas con altura fija y misma tamaño */
 .pedido-card {
     background: white;
     border-radius: 12px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
     padding: 12px;
     border: 1px solid #f0f0f0;
-    height: auto;
-}
-
-@media (max-width: 900px) {
-    .pedidos-grid {
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 16px;
-    }
-}
-
-@media (max-width: 600px) {
-    .pedidos-grid {
-        grid-template-columns: 1fr;
-        gap: 12px;
-    }
+    height: 320px; /* Altura fija para todas las tarjetas */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
 }
 
 .pedido-card:hover {
@@ -49,12 +37,13 @@
     transform: translateY(-2px);
 }
 
-/* Header del pedido */
+/* Header del pedido - no scroll */
 .pedido-header {
     display: flex;
     flex-direction: column;
     gap: 6px;
     margin-bottom: 4px;
+    flex-shrink: 0;
 }
 
 .pedido-header-row {
@@ -106,64 +95,35 @@
     font-size: 10px;
 }
 
-/* Estados */
-.pedido-estado {
-    padding: 3px 10px;
-    border-radius: 6px;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-}
-
-.estado-1 {
-    background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
-    color: white;
-    box-shadow: 0 2px 4px rgba(244, 67, 54, 0.3);
-    animation: pulse-red 1.5s infinite;
-}
-
-@keyframes pulse-red {
-    0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.4); }
-    70% { box-shadow: 0 0 0 6px rgba(244, 67, 54, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
-}
-
-.estado-2 {
-    background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
-    color: white;
-    box-shadow: 0 2px 4px rgba(33, 150, 243, 0.3);
-}
-
-.estado-3 {
-    background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
-    color: white;
-    box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
-}
-
-.estado-4 {
-    background: linear-gradient(135deg, #9e9e9e 0%, #757575 100%);
-    color: white;
-    box-shadow: 0 2px 4px rgba(158, 158, 158, 0.3);
-}
-
-.estado-1:hover,
-.estado-2:hover,
-.estado-3:hover {
-    transform: translateY(-1px);
-    filter: brightness(1.05);
-    transition: all 0.2s ease;
-}
-
 /* Línea divisoria */
 .linea-head {
     height: 1px;
     background: #e0e0e0;
     margin: 4px 0 8px 0;
+    flex-shrink: 0;
 }
 
-/* Body - Items */
+/* Body - Items con scroll */
 .pedido-body {
-    margin: 0;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0; /* Importante para que funcione el scroll */
+    margin: 0 0 8px 0;
+}
+
+/* Scroll personalizado para el body */
+.pedido-body::-webkit-scrollbar {
+    width: 4px;
+}
+
+.pedido-body::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 4px;
+}
+
+.pedido-body::-webkit-scrollbar-thumb {
+    background: #1a472a;
+    border-radius: 4px;
 }
 
 .pedido-items {
@@ -177,7 +137,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 4px 0;
+    padding: 6px 0;
     border-bottom: 0.5px solid #f0f0f0;
 }
 
@@ -188,7 +148,7 @@
 .pedido-items li:hover {
     background: #fafafa;
     margin: 0 -8px;
-    padding: 4px 8px;
+    padding: 6px 8px;
     border-radius: 8px;
 }
 
@@ -198,6 +158,7 @@
     font-weight: 500;
     flex: 2;
     text-align: left;
+    word-break: break-word;
 }
 
 .item-cantidad {
@@ -221,14 +182,15 @@
     min-width: 70px;
 }
 
-/* Footer del pedido */
+/* Footer del pedido - fijo abajo */
 .pedido-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 10px;
+    margin-top: 0;
     padding-top: 10px;
     border-top: 1px solid #ddd;
+    flex-shrink: 0;
 }
 
 .total-wrapper {
@@ -304,13 +266,6 @@
     transform: translateY(0);
 }
 
-/* Contenedor de botones en la tarjeta */
-.pedido-buttons {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
 /* Estado finalizado (sin acciones) */
 .estado-finalizado {
     background: #9e9e9e;
@@ -322,6 +277,46 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
+}
+
+/* Estados de pedido */
+.estado-1 {
+    background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+    color: white;
+    box-shadow: 0 2px 4px rgba(244, 67, 54, 0.3);
+    animation: pulse-red 1.5s infinite;
+}
+
+@keyframes pulse-red {
+    0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.4); }
+    70% { box-shadow: 0 0 0 6px rgba(244, 67, 54, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
+}
+
+.estado-2 {
+    background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+    color: white;
+    box-shadow: 0 2px 4px rgba(33, 150, 243, 0.3);
+}
+
+.estado-3 {
+    background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+    color: white;
+    box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+}
+
+.estado-4 {
+    background: linear-gradient(135deg, #9e9e9e 0%, #757575 100%);
+    color: white;
+    box-shadow: 0 2px 4px rgba(158, 158, 158, 0.3);
+}
+
+.estado-pedido {
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
 }
 
 /* Estados antiguos (compatibilidad) */
@@ -340,14 +335,7 @@
     color: #f44336;
 }
 
-/* Icono del carrito */
-.carrito-icono {
-    width: 18px;
-    height: 18px;
-    object-fit: contain;
-}
-
-/* Scrollbar personalizado */
+/* Scrollbar personalizado del grid */
 .pedidos-grid::-webkit-scrollbar {
     width: 8px;
 }
@@ -370,6 +358,11 @@
 
 /* Responsive */
 @media (max-width: 600px) {
+    .pedidos-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
     .pedido-footer {
         flex-wrap: wrap;
         gap: 8px;

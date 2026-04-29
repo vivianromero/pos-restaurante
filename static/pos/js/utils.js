@@ -17,7 +17,8 @@ function getCSRFToken() {
 }
 
 function formatearPrecio(precio) {
-    return `$${parseFloat(precio).toLocaleString(undefined, {
+//    toLocaleString 'en-US' para que funcione en otros dispositivos, siempre el mismo formato
+    return `$${parseFloat(precio).toLocaleString('en-US', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     })}`;
@@ -80,6 +81,52 @@ function toast(msg, tipo = 'success', duracion = 3000) {
         }, 500);
     }, duracion);
 }
+
+function validarNumeroInput(valor, { min = 0, max = Infinity, decimales = 2 } = {}) {
+
+        if (valor === null || valor === undefined) return '';
+
+        valor = String(valor);
+
+        // coma a punto
+        valor = valor.replace(',', '.');
+
+        // solo números y punto
+        valor = valor.replace(/[^0-9.]/g, '');
+
+        // evitar múltiples puntos
+        const partes = valor.split('.');
+        if (partes.length > 2) {
+            valor = partes[0] + '.' + partes[1];
+        }
+
+        // 🔥 CLAVE: permitir estado intermedio "12."
+        if (valor.endsWith('.')) {
+            return valor;
+        }
+
+        // si empieza con punto ".5" → convertir a "0.5"
+        if (valor.startsWith('.')) {
+            valor = '0' + valor;
+        }
+
+        const num = parseFloat(valor);
+
+        if (isNaN(num)) return '';
+
+        let resultado = num;
+
+        if (resultado < min) resultado = min;
+        if (resultado > max) resultado = max;
+
+        // 🔥 mantener decimales SOLO si ya es número completo
+        if (valor.includes('.')) {
+            const [entero, decimal] = valor.split('.');
+            return `${entero}.${decimal.slice(0, decimales)}`;
+        }
+
+        return String(resultado);
+    }
 
 window.getCSRFToken = getCSRFToken;
 window.formatearPrecio = formatearPrecio;

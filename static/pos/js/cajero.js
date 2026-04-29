@@ -15,36 +15,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     await cargarFechaOperacion();
     cargarPendientes();
 
-    const efectivoInput = document.getElementById('efectivoInput');
-    if (efectivoInput) {
-        efectivoInput.addEventListener('input', function() {
-            const total = ordenSeleccionada?.importe_total || 0;
-            const efectivo = parseFloat(this.value) || 0;
-            const cambio = efectivo - total;
-            const cambioInfo = document.getElementById('cambioInfo');
-
-            if (cambioInfo) {
-                if (cambio >= 0) {
-                    cambioInfo.innerHTML = `💵 Cambio: ${formatearPrecio(cambio)}`;
-                    cambioInfo.style.color = '#2e7d32';
-                } else {
-                    cambioInfo.innerHTML = `⚠️ Faltante: ${formatearPrecio(-cambio)}`;
-                    cambioInfo.style.color = '#f44336';
-                }
-            }
-        });
-    }
-
-    const formaPagoSelect = document.getElementById('formaPagoSelect');
-    const efectivoSection = document.getElementById('efectivoSection');
-
-    if (formaPagoSelect && efectivoSection) {
-        formaPagoSelect.addEventListener('change', function() {
-            efectivoSection.style.display = this.value === '1' ? 'flex' : 'none';
-        });
-    }
-
-    const modal = document.getElementById('ordenModal');
+    const modal = document.getElementById('pagoModal');
     if (modal) {
         modal.addEventListener('click', function(e) {
             if (e.target === modal) cerrarModal();
@@ -57,6 +28,82 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (e.target === confirmModal) cerrarConfirmModal();
         });
     }
+
+    // =============================
+    // 🔁 RECALCULAR
+    // =============================
+    function recalcularTodo() {
+
+        const importeBase = parseFloat(
+            document.getElementById('pagoImporteTotal')
+            .textContent.replace('$', '').replace(',', '')
+        ) || 0;
+
+        let descuento = parseFloat(
+            document.getElementById('pagoDescuentoPorcentaje').value
+        ) || 0;
+
+        const montoDescuento = (importeBase * descuento) / 100;
+        const totalFinal = importeBase - montoDescuento;
+        console.log("Total Final:", totalFinal);
+        toast("Total Final:", totalFinal);
+
+        // TOTAL
+        const totalSpan = document.getElementById('pagoTotalAPagar');
+        totalSpan.textContent = formatearPrecio(totalFinal);
+        totalSpan.style.color = totalFinal < 0 ? '#dc3545' : '#16a34a';
+
+        // DEVOLUCIÓN
+        const formaPago = document.getElementById('pagoFormaPago').value;
+        const monto = parseFloat(
+            document.getElementById('pagoMontoEntregado').value
+        ) || 0;
+
+        const devolucionSpan = document.getElementById('pagoDevolucion');
+
+        if (formaPago === 'efectivo') {
+            const devolucion = monto - totalFinal;
+            devolucionSpan.textContent = formatearPrecio(devolucion);
+            devolucionSpan.style.color = devolucion < 0 ? '#dc3545' : '#16a34a';
+        } else {
+            devolucionSpan.textContent = formatearPrecio(0);
+        }
+    }
+
+    // =============================
+    // 🔌 BIND INPUTS
+    // =============================
+    function bindInput(id, config) {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        el.addEventListener('input', function() {
+            this.value = validarNumeroInput(this.value, config);
+            recalcularTodo();
+        });
+
+        el.addEventListener('blur', function() {
+            let num = parseFloat(this.value);
+            this.value = !isNaN(num) ? num.toFixed(config.decimales || 2) : '';
+        });
+    }
+
+    // =============================
+    // 🎯 APLICAR A INPUTS
+    // =============================
+    bindInput('pagoDescuentoPorcentaje', { min: 0, max: 100, decimales: 2 });
+    bindInput('pagoMontoEntregado', { min: 0, decimales: 2 });
+    bindInput('pagoPropina', { min: 0, decimales: 2 });
+
+    // Cambio forma de pago
+    const formaPagoSelect = document.getElementById('pagoFormaPago');
+    if (formaPagoSelect) {
+        formaPagoSelect.addEventListener('change', function() {
+            controlarVisibilidadPago();
+            recalcularTodo();
+        });
+    }
+
 });
 
 
@@ -73,7 +120,6 @@ async function cargarPendientes() {
         }
 
         const url = `/api/ordenes/?${params.toString()}`;
-        console.log(url);
 
         const response = await fetch(url, {
             method: 'GET',
@@ -87,7 +133,6 @@ async function cargarPendientes() {
         if (!response.ok) throw new Error(`Error ${response.status}`);
 
         const data = await response.json();
-        console.log(data);
 
         renderOrdenes(data);
         cargarResumen();
@@ -183,40 +228,56 @@ function renderOrdenes(data) {
 }
 
 function actualizarModalConOrden(orden) {
+    console.log("📝 Actualizando modal con orden:", orden);
+
     const itemsContainer = document.getElementById('modalItemsList');
+    const modalNumeroOrden = document.getElementById('modalNumeroOrden');
+    const modalMesa = document.getElementById('modalMesa');
+    const modalMesero = document.getElementById('modalMesero');
+    const pagoImporteTotal = document.getElementById('pagoImporteTotal');
+    const pagoDescuentoPorcentaje = document.getElementById('pagoDescuentoPorcentaje');
+    const pagoTotalAPagar = document.getElementById('pagoTotalAPagar');
 
-    if (itemsContainer) {
-        itemsContainer.innerHTML = orden.items.map(item => `
-            <li>
-                <span class="item-nombre">${item.producto_nombre} x${item.cantidad}</span>
-                <span class="item-precio">${formatearPrecio(item.precio_unitario * item.cantidad)}</span>
-            </li>
-        `).join('');
-    }
+    if (modalNumeroOrden) modalNumeroOrden.innerText = orden.numero_orden || '?';
+    if (modalMesa) modalMesa.innerText = orden.mesa_info?.numero || orden.mesa?.numero || '?';
+    if (modalMesero) modalMesero.innerText = orden.usuario || '-';
+    if (pagoImporteTotal) pagoImporteTotal.innerText = formatearPrecio(orden.importe_total) || '-';
+    if (pagoTotalAPagar) pagoTotalAPagar.innerText = formatearPrecio(orden.total_apagar) || '-';
+    if (pagoDescuentoPorcentaje) pagoDescuentoPorcentaje.value = orden.porc_descuento
 
-    document.getElementById('modalNumeroOrden').innerText = orden.numero_orden;
-    document.getElementById('modalMesa').innerText = orden.mesa_info?.numero || '?';
-    document.getElementById('modalMesero').innerText = orden.usuario || '-';
-
-    const subtotal = orden.items.reduce((sum, item) => sum + (item.precio_unitario * item.cantidad), 0);
+    // Calcular totales
+    const subtotal = orden.items ? orden.items.reduce((sum, item) => sum + (item.precio_unitario * item.cantidad), 0) : 0;
     const descuento = subtotal * (orden.porc_descuento || 0) / 100;
     const totalConDescuento = subtotal - descuento;
     const totalFinal = totalConDescuento + (orden.propina || 0);
 
-    document.getElementById('modalSubtotal').innerText = formatearPrecio(subtotal);
-    document.getElementById('modalDescuentoPorc').innerText = orden.porc_descuento || 0;
-    document.getElementById('modalDescuento').innerText = `-${formatearPrecio(descuento)}`;
-    document.getElementById('modalPropina').innerText = formatearPrecio(orden.propina || 0);
-    document.getElementById('modalTotal').innerText = formatearPrecio(totalFinal);
+    const modalSubtotal = document.getElementById('modalSubtotal');
+    const modalDescuentoPorc = document.getElementById('modalDescuentoPorc');
+    const modalDescuento = document.getElementById('modalDescuento');
+    const modalPropina = document.getElementById('modalPropina');
+    const modalTotal = document.getElementById('modalTotal');
 
-    document.getElementById('descuentoInput').value = orden.porc_descuento || 0;
-    document.getElementById('propinaInput').value = orden.propina || 0;
-    document.getElementById('efectivoInput').value = orden.importe_total || 0;
+    if (modalSubtotal) modalSubtotal.innerText = formatearPrecio(subtotal);
+    if (modalDescuentoPorc) modalDescuentoPorc.innerText = orden.porc_descuento || 0;
+    if (modalDescuento) modalDescuento.innerText = `-${formatearPrecio(descuento)}`;
+    if (modalPropina) modalPropina.innerText = formatearPrecio(orden.propina || 0);
+    if (modalTotal) modalTotal.innerText = formatearPrecio(totalFinal);
+
+    // Actualizar inputs
+    const descuentoInput = document.getElementById('descuentoInput');
+    const propinaInput = document.getElementById('propinaInput');
+
+    if (descuentoInput) descuentoInput.value = orden.porc_descuento || 0;
+    if (propinaInput) propinaInput.value = orden.propina || 0;
+
 }
 
 async function verDetalleOrden(ordenId) {
     try {
-        const response = await fetch(`/api/cajero/${ordenId}/`, {
+        // ✅ Usar la URL correcta del endpoint
+        const url = `/api/cajero/${ordenId}/`;
+
+        const response = await fetch(url, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -225,18 +286,26 @@ async function verDetalleOrden(ordenId) {
             credentials: 'same-origin'
         });
 
-        if (!response.ok) throw new Error(`Error ${response.status}`);
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
 
         const orden = await response.json();
 
         ordenSeleccionada = orden;
         actualizarModalConOrden(orden);
 
-        mostrarModal();
+        // ✅ Mostrar el modal correctamente
+        const modal = document.getElementById('pagoModal');
+        if (modal) {
+            modal.style.display = 'flex';
+        } else {
+            console.error("❌ Modal no encontrado");
+        }
 
     } catch (error) {
-        console.error('Error:', error);
-        toast("❌ Error al cargar detalle de la orden", "error");
+        console.error('❌ Error en verDetalleOrden:', error);
+        toast("❌ Error al cargar detalle de la orden: " + error.message, "error");
     }
 }
 
@@ -423,7 +492,6 @@ async function registrarPago() {
     if (!ordenSeleccionada) return;
 
     const formaPago = document.getElementById('formaPagoSelect')?.value;
-    let efectivoEntregado = document.getElementById('efectivoInput')?.value || 0;
     let propina = document.getElementById('propinaInput')?.value || 0;
 
     if (!formaPago) {
@@ -564,5 +632,59 @@ async function verificarPuedeCambiarFecha() {
     } catch (error) {
         toast(`❌ ${data.message}`, "error")
         return false;
+    }
+}
+
+function cerrarModal() {
+    const modal = document.getElementById('pagoModal');
+
+    if (modal) {
+        modal.style.display = 'none';
+
+        // ---- limpiar inputs ----
+        document.getElementById('pagoDescuentoPorcentaje').value = '0.00';
+        document.getElementById('pagoMontoEntregado').value = '0.00';
+        document.getElementById('pagoPropina').value = '0.00';
+
+        // ---- reset selects ----
+        document.getElementById('pagoFormaPago').value = 'efectivo';
+
+        // ---- reset totales ----
+        document.getElementById('pagoTotalAPagar').textContent = '$0.00';
+        document.getElementById('pagoDevolucion').textContent = '$0.00';
+
+        // colores por defecto
+        document.getElementById('pagoDevolucion').style.color = '#28a745';
+        document.getElementById('pagoTotalAPagar').style.color = '#000';
+
+        // ---- limpiar datos visuales ----
+        document.getElementById('modalNumeroOrden').textContent = '';
+        document.getElementById('modalMesa').textContent = '';
+        document.getElementById('modalMesero').textContent = '';
+        document.getElementById('pagoImporteTotal').textContent = '$0.00';
+    }
+
+    ordenSeleccionada = null;
+}
+
+function controlarVisibilidadPago() {
+    const formaPago = document.getElementById('pagoFormaPago').value;
+    const montoEntregadoGroup = document.getElementById('pagoMontoEntregadoGroup');
+    const devolucionDiv = document.getElementById('pagoDevoluciondiv');
+
+    if (formaPago === 'transferencia') {
+        // Ocultar campos de efectivo
+        if (montoEntregadoGroup) montoEntregadoGroup.style.display = 'none';
+        if (devolucionDiv) devolucionDiv.style.display = 'none';
+
+        // Limpiar valores de efectivo
+        const montoEntregado = document.getElementById('pagoMontoEntregado');
+        if (montoEntregado) montoEntregado.value = 0;
+
+        // Restablecer texto de devolución
+    } else {
+        // Mostrar campos de efectivo
+        if (montoEntregadoGroup) montoEntregadoGroup.style.display = 'block';
+        if (devolucionDiv) devolucionDiv.style.display = 'block';
     }
 }
