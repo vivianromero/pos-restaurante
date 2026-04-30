@@ -1,9 +1,11 @@
+from datetime import timedelta
 from decimal import Decimal
 
 from django.conf import settings
 from django.db import models
 from django.db import transaction
 from django.db.models import Sum, F
+from django.utils import timezone
 from django_choices_field import IntegerChoicesField
 
 from ..administracion.models import IdModels, MenuProduct, Table
@@ -35,6 +37,14 @@ class Order(IdModels):
     propina = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Propina Recibida', default=0.00)
     importe_total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, editable=False)
     porc_descuento = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, verbose_name='% Descuento')
+    locked_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="locked_orders"
+    )
+    locked_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         indexes = [
@@ -64,6 +74,15 @@ class Order(IdModels):
 
         return self.importe_total - self.monto_descuento
 
+    def calcular_total(self):
+        """Calcula el total basado en los items y descuentos"""
+        total = self.items.aggregate(
+            total=Sum(F('cantidad') * F('precio_unitario'))
+        )['total'] or Decimal('0')
+
+        self.importe_total = total * (Decimal('1') - Decimal(self.porc_descuento) / Decimal('100'))
+        return self.importe_total
+
     def generar_numero_orden(self):
         mesa_numero = self.mesa.numero
         fecha_operacion = get_fecha_operacion_actual()
@@ -73,6 +92,23 @@ class Order(IdModels):
                 fecha_operacion=fecha_operacion
             ).count() + 1
         return f"{mesa_numero:03d}-{fecha_str.replace('-', '')}-{consecutivo:04d}"
+
+    def lock(self, user):
+        if self.locked_by and self.locked_by != user:
+            raise PermissionError(f"Orden bloqueada por {self.locked_by.username}")
+        self.locked_by = user
+        self.locked_at = timezone.now()
+        self.save()
+
+    def unlock(self):
+        self.locked_by = None
+        self.locked_at = None
+        self.save()
+
+    def is_lock_expired(self): #si la orden al abrirla ya lleva r min abiertas se libera
+        if self.locked_at:
+            return timezone.now() - self.locked_at > timedelta(minutes=5)
+        return False
 
     def save(self, *args, **kwargs):
 

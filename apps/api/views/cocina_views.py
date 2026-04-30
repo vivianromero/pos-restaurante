@@ -44,6 +44,12 @@ class CocinaViewSet(viewsets.ReadOnlyModelViewSet):
                 'error': 'Pedido no encontrado'
             }, status=status.HTTP_404_NOT_FOUND)
 
+        if order.cancelada:
+            return Response({
+                'success': False,
+                'error': f'El pedido ha sido Cancelado.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
         if order.estado != EstadoOrden.PENDIENTE:
             return Response({
                 'success': False,
@@ -69,11 +75,19 @@ class CocinaViewSet(viewsets.ReadOnlyModelViewSet):
                 'error': 'Pedido no encontrado'
             }, status=status.HTTP_404_NOT_FOUND)
 
+        if order.cancelada:
+            return Response({
+                'success': False,
+                'error': f'El pedido ha sido Cancelado.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
         if order.estado != EstadoOrden.PROCESANDO:
             return Response({
                 'success': False,
                 'error': f'El pedido debe estar en estado Procesando. Estado actual: {order.get_estado_display()}'
             }, status=status.HTTP_400_BAD_REQUEST)
+
+
 
         order.estado = EstadoOrden.SERVIDA
         order.save()

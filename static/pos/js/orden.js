@@ -14,6 +14,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.querySelectorAll('.main-tab').forEach(tab => {
         tab.addEventListener('click', () => cambiarTab(tab.dataset.tab));
     });
+
+    window.addEventListener('beforeunload', () => {
+    if (ordenIdActual) {
+            const url = `/api/ordenes/${ordenIdActual}/cerrar-orden/`;
+            const data = new FormData();
+            data.append('csrfmiddlewaretoken', getCSRFToken());
+            navigator.sendBeacon(url, data);
+        }
+    });
+
 });
 
 // Función auxiliar para actualizar ambos tabs
@@ -49,6 +59,9 @@ function eliminarProducto(menuProductId) {
             ordenActual[index].cantidad--;
         } else {
             ordenActual.splice(index, 1);
+        }
+        if (ordenIdActual) {
+            guardarCambiosOrden();
         }
         actualizarAmbosTabs();
         toast(`❌ Producto removido`);
@@ -186,6 +199,10 @@ async function cambiarMesa() {
             cancelText: 'Cancelar'
         });
         if (!confirmar) return;
+    }
+
+    if (ordenIdActual){
+        await cerrarOrden(ordenIdActual);
     }
 
     // Limpiar variables
@@ -346,7 +363,7 @@ async function guardarCambiosOrden() {
         }
 
     } catch (error) {
-        toast("Error al guardar los cambios", tipo='error');
+        toast("Error al guardar los cambiosssss", tipo='error');
         console.log(error);
         return false;
     }

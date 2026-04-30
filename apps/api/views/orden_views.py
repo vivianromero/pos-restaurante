@@ -15,6 +15,7 @@ from apps.administracion.models import ConfiguracionSystem, Table, MenuProduct
 from apps.core.utils import get_fecha_operacion_actual
 from apps.ordenes.models import Order, OrderItem, EstadoOrden
 from ..serializers.orden_serializer import OrdenSerializer, OrdenCreateSerializer
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -303,7 +304,7 @@ class OrdenViewSet(viewsets.ModelViewSet):
         if not items_data:
             return Response({
                 'success': False,
-                'error': 'Debe enviar al menos un item'
+                'error': 'Debe tener al menos un producto'
             }, status=status.HTTP_400_BAD_REQUEST)
 
         with transaction.atomic():
@@ -384,3 +385,41 @@ class OrdenViewSet(viewsets.ModelViewSet):
             'estado': order.estado,
             'estado_label': order.get_estado_display()
         })
+
+    @action(detail=True, methods=['post'], url_path='abrir-orden')
+    def abrir_orden(self, request, pk=None):
+        with transaction.atomic():
+            order = self.get_queryset().select_for_update().get(pk=pk)
+
+            # Si está bloqueada por otro usuario
+            if order.locked_by and order.locked_by != request.user:
+                return Response(
+                    {"error": f"Orden en uso por {order.locked_by.username}"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            # Bloquear por el usuario actual
+            order.locked_by = request.user
+            order.locked_at = timezone.now()
+            order.save()
+
+            # 🔑 Devolver los datos completos de la orden
+            serializer = self.get_serializer(order)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='cerrar-orden')
+    def cerrar_orden(self, request, pk=None):
+        with transaction.atomic():
+            order = self.get_queryset().select_for_update().get(pk=pk)
+
+            # Solo quien la abrió puede cerrarla
+            if order.locked_by and order.locked_by != request.user:
+                return Response(
+                    {"error": f"No puedes cerrar la orden, está bloqueada por {order.locked_by.username}"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            order.locked_by = None
+            order.locked_at = None
+            order.save()
+            return Response({"ok": "Orden cerrada y desbloqueada"})

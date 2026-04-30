@@ -111,73 +111,32 @@ async function seleccionarMesa(mesa) {
 }
 
 async function cargarOrdenExistente(orderId) {
-    try {
+    const data = await abrirOrdenExistente(orderId);
+    if (!data) return;
 
-        mostrarLoading('mesasGrid', 'mesas');
+    // ✅ Ya tienes los datos de la orden directamente
+    ordenIdActual = data.id;
+    ordenNumeroActual = data.numero_orden;
+    ordenEstadoActual = data.estado;
+    ordenActual = data.items.map(item => ({
+        menu_product_id: item.menu_product,
+        nombre: item.producto_nombre,
+        precio: parseFloat(item.precio_unitario),
+        cantidad: item.cantidad,
+        subtotal: parseFloat(item.subtotal)
+    }));
 
-        const url = `/api/ordenes/${orderId}/`;
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCSRFToken()
-            },
-            credentials: 'same-origin'
-        });
+    actualizarUI();
+    document.getElementById('mesasScreen').classList.remove('active');
+    document.getElementById('menuScreen').classList.add('active');
+    document.getElementById('mesaNumero').innerText = `Mesa #${mesaSeleccionada.numero}`;
+    document.getElementById('ordenNumero').innerText = `#${data.numero_orden}`;
 
-        if (!response.ok) {
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
+    if (typeof renderCategorias === 'function') renderCategorias();
+    if (typeof cargarMenusAPI === 'function') await cargarMenusAPI();
+    if (typeof cambiarTab === 'function') cambiarTab('menu');
+    if (typeof actualizarBotonPorEstado === 'function') actualizarBotonPorEstado();
 
-        const data = await response.json();
-
-        ordenIdActual = data.id;
-        ordenNumeroActual = data.numero_orden;
-        ordenEstadoActual = data.estado;
-
-        ordenActual = data.items.map(item => ({
-            menu_product_id: item.menu_product,
-            nombre: item.producto_nombre,
-            precio: parseFloat(item.precio_unitario),
-            cantidad: item.cantidad,
-            subtotal: parseFloat(item.subtotal)
-        }));
-
-        actualizarUI();
-
-        document.getElementById('mesasScreen').classList.remove('active');
-        document.getElementById('menuScreen').classList.add('active');
-
-        document.getElementById('mesaNumero').innerText = `Mesa #${mesaSeleccionada.numero}`;
-        document.getElementById('ordenNumero').innerText = `#${data.numero_orden}`;
-
-        // Llamar con verificación
-        if (typeof renderCategorias === 'function') {
-            renderCategorias();
-        } else {
-            console.error("❌ renderCategorias no está definida");
-        }
-
-        if (typeof cargarMenusAPI === 'function') {
-            await cargarMenusAPI();
-        } else {
-            console.error("❌ cargarMenusAPI no está definida");
-        }
-
-        if (typeof cambiarTab === 'function') {
-            cambiarTab('menu');
-        } else {
-            console.error("❌ cambiarTab no está definida");
-        }
-
-        if (typeof actualizarBotonPorEstado === 'function') {
-            actualizarBotonPorEstado();
-        }
-
-    } catch (error) {
-        console.error("Error en cargarOrdenExistente:", error);
-        toast('Error al cargar la orden: ' + error.message, tipo='error');
-    }
 }
 
 function actualizarBotonPorEstado() {

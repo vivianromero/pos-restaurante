@@ -29,8 +29,36 @@ function formatearNumeroOrden(numero) {
     return `#${numero.toString().padStart(3, '0')}`;
 }
 
-function cerrarSesion() {
+async function cerrarSesion() {
+    if (ordenIdActual) {
+        await cerrarOrden();
+    }
     window.location.href = '/logout/';
+}
+
+async function cerrarOrden(ordenId) {
+    if (!ordenId) return; // No hay orden abierta
+
+    try {
+        const url = `/api/ordenes/${ordenId}/cerrar-orden/`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            credentials: 'same-origin'
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            toast(errorData.error || 'No se pudo cerrar la orden', tipo='error');
+            return;
+        }
+    } catch (error) {
+        console.error("Error al cerrar la orden:", error);
+        toast('Error al cerrar la orden: ' + error.message, tipo='error');
+    }
 }
 
 function toast(msg, tipo = 'success', duracion = 3000) {
@@ -127,6 +155,41 @@ function validarNumeroInput(valor, { min = 0, max = Infinity, decimales = 2 } = 
 
         return String(resultado);
     }
+
+async function abrirOrdenExistente(orderId) {
+    try {
+        const url = `/api/ordenes/${orderId}/abrir-orden/`;
+        console.log("Intentando abrir orden:", url);
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            credentials: 'same-origin'
+        });
+
+        if (!response.ok) {
+            if (response.status === 403) {
+                const errorData = await response.json();
+                toast(errorData.error || 'Orden en uso por otro usuario', tipo='error');
+                return null; // No continuar si está bloqueada
+            }
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        // ✅ Devuelve los datos completos de la orden
+        const data = await response.json();
+        return data;
+
+    } catch (error) {
+        console.error("Error en abrirOrdenExistente:", error);
+        toast('Error al abrir la orden: ' + error.message, tipo='error');
+        return null;
+    }
+}
+
 
 window.getCSRFToken = getCSRFToken;
 window.formatearPrecio = formatearPrecio;

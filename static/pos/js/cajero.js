@@ -5,6 +5,7 @@
 // ============================================
 let flatpickrInstance = null;
 let ordenesPendientes = 0;
+let interval = null;
 
 // ============================================
 // INICIALIZACIÓN
@@ -13,6 +14,7 @@ let ordenesPendientes = 0;
 document.addEventListener('DOMContentLoaded', async function() {
     await cargarConfiguracion();
     await cargarFechaOperacion();
+    iniciarAutoRefresh();
     cargarPendientes();
 
     const modal = document.getElementById('pagoModal');
@@ -106,6 +108,12 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 });
 
+function iniciarAutoRefresh(tiempo=30000) {  // tiempo en milisegundos
+    if (interval) clearInterval(interval);
+    interval = setInterval(() => {
+        cargarPendientes();
+    }, tiempo);
+}
 
 async function cargarPendientes() {
     try {
@@ -274,23 +282,9 @@ function actualizarModalConOrden(orden) {
 
 async function verDetalleOrden(ordenId) {
     try {
-        // ✅ Usar la URL correcta del endpoint
-        const url = `/api/cajero/${ordenId}/`;
 
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCSRFToken()
-            },
-            credentials: 'same-origin'
-        });
-
-        if (!response.ok) {
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
-
-        const orden = await response.json();
+        const orden = await abrirOrdenExistente(ordenId);
+        if (!orden) return;
 
         ordenSeleccionada = orden;
         actualizarModalConOrden(orden);
@@ -639,6 +633,8 @@ function cerrarModal() {
     const modal = document.getElementById('pagoModal');
 
     if (modal) {
+
+        cerrarOrden(ordenSeleccionada.id);
         modal.style.display = 'none';
 
         // ---- limpiar inputs ----

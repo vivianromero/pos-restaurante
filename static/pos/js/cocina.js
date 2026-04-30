@@ -220,15 +220,15 @@ function mostrarError() {
 }
 
 
-// Auto-refresh cada 30 segundos
 let intervalId = null;
 
-function iniciarAutoRefresh() {
+function iniciarAutoRefresh(tiempo=30000) {  // tiempo en milisegundos
     if (intervalId) clearInterval(intervalId);
     intervalId = setInterval(() => {
         cargarPedidos();
-    }, 30000);
+    }, tiempo);
 }
+
 
 function detenerAutoRefresh() {
     if (intervalId) {
