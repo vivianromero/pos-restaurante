@@ -64,7 +64,7 @@ function eliminarProducto(menuProductId) {
             guardarCambiosOrden();
         }
         actualizarAmbosTabs();
-        toast(`❌ Producto removido`);
+        toast(`Producto removido`, "error");
     }
 }
 
@@ -353,7 +353,7 @@ async function guardarCambiosOrden() {
         const data = await response.json();
 
         if (response.ok && data.success) {
-            toast("Cambios guardados");
+            toast("Cambios guardados", "success");
             ordenEstadoActual = data.data.estado;
             actualizarUI();
             return true;

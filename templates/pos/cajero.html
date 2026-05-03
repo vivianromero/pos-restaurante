@@ -30,8 +30,14 @@
                     <span class="stat-value" id="pendientesCount">0</span>
                 </div>
                 <div class="stat">
-                    <span class="stat-label">💰 Total pendiente:</span>
-                    <span class="stat-value" id="totalPendiente">$0</span>
+                    <span class="stat-label">📊 Importe:</span>
+                    <span class="stat-value" id="totalImporte">$0</span>
+
+                    <span class="stat-label">🏷️ Descuento:</span>
+                    <span class="stat-value" id="totalDescuento">$0</span>
+
+                    <span class="stat-label">💵 Por pagar:</span>
+                    <span class="stat-value" id="totalPorpagar">$0</span>
                 </div>
                 <div class="stat fecha-stat">
                     <div class="fecha-control">
@@ -134,92 +140,13 @@
 
                 <!-- BOTONES -->
                 <div class="botones-pago">
-                    <button class="btn-guardar" id="pagoGuardarBtn">Guardar</button>
-                    <button class="btn-cerrar-orden" id="pagoCerrarBtn">Cerrar Orden</button>
+                    <button class="btn-guardar" id="pagoGuardarBtn" onclick="guardarPago('guardar')">Guardar</button>
+                    <button class="btn-cerrar-orden" id="pagoCerrarBtn" onclick="guardarPago('pagar')">Efectuar Pago</button>
                 </div>
 
             </div>
         </div>
     </div>
-
-<!--    &lt;!&ndash; MODAL DE PAGO (completo con todos los campos) &ndash;&gt;-->
-<!--    <div id="pagoModal" class="modal" style="display: none;">-->
-<!--        <div class="modal-content modal-content-pago">-->
-<!--            <div class="modal-header">-->
-<!--                <h2>💰 Procesar Pago - Orden #<span id="modalNumeroOrden"></span></h2>-->
-<!--                <button class="modal-close" onclick="cerrarModal()">&times;</button>-->
-<!--            </div>-->
-<!--            <div class="modal-body">-->
-<!--                &lt;!&ndash; Información básica &ndash;&gt;-->
-<!--                <div class="modal-info">-->
-<!--                    <div class="modal-info-left">-->
-<!--                        <p>-->
-<!--                            <strong>🪑 Mesa:</strong>-->
-<!--                            <span id="modalMesa"></span>-->
-<!--                        </p>-->
-<!--                        <p>-->
-<!--                            <strong>👨‍🍳 Mesero:</strong>-->
-<!--                            <span id="modalMesero"></span>-->
-<!--                        </p>-->
-<!--                    </div>-->
-<!--                    <div class="modal-info-right">-->
-<!--                        <p>-->
-<!--                            <strong style="font-size: 1.2em;">💰 Importe:</strong>-->
-<!--                            <span id="pagoImporteTotal" style="font-size: 1.2em; font-weight: bold;">$0.00</span>-->
-<!--                        </p>-->
-<!--                    </div>-->
-<!--                </div>-->
-
-<!--                &lt;!&ndash; % Descuento y Total a pagar en la misma línea &ndash;&gt;-->
-<!--                <div style="display: flex; gap: 15px; margin-bottom: 15px; align-items: flex-end;">-->
-<!--                    <div class="campo-pago" style="flex: 1; margin-bottom: 0;">-->
-<!--                        <label>🏷️ % Descuento:</label>-->
-<!--                        <input type="text" id="pagoDescuentoPorcentaje" value="0" step="0.01" min="0" max="100" inputmode="decimal"-->
-<!--  pattern="[0-9]+(\.[0-9]{1,2})?">-->
-<!--                    </div>-->
-<!--                    <div class="total-mostrado" style="margin: 2px; height: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">-->
-<!--                        <span>Total a Pagar:</span>-->
-<!--                        <strong id="pagoTotalAPagar">$0.00</strong>-->
-<!--                    </div>-->
-<!--                </div>-->
-
-<!--                &lt;!&ndash; Forma de pago, Monto entregado y Devolución en la misma línea &ndash;&gt;-->
-<!--                <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">-->
-<!--                    <div class="campo-pago" style="flex: 1; margin-bottom: 0;">-->
-<!--                        <label>💵 Forma de pago:</label>-->
-<!--                        <select id="pagoFormaPago">-->
-<!--                            <option value="efectivo">Efectivo</option>-->
-<!--                            <option value="transferencia">Transferencia</option>-->
-<!--                        </select>-->
-<!--                    </div>-->
-<!--                    <div class="campo-pago monto-entregado-group" id="pagoMontoEntregadoGroup" style="flex: 1; margin-bottom: 0;">-->
-<!--                        <label>💸 Monto entregado:</label>-->
-<!--                        <input type="text" id="pagoMontoEntregado" value="0" step="0.01" min="0" inputmode="decimal"-->
-<!--  pattern="[0-9]+(\.[0-9]{1,2})?">-->
-<!--                    </div>-->
-<!--                    <div id="pagoDevoluciondiv" class="devolucion" style="flex: 1; display: flex; align-items: center; justify-content: center; margin: 2px; gap: 8px;">-->
-<!--                        <span>Devolución:</span>-->
-<!--                        <strong id="pagoDevolucion">$0.00</strong>-->
-<!--                    </div>-->
-<!--                </div>-->
-
-<!--                &lt;!&ndash; Propina abonada (línea siguiente) &ndash;&gt;-->
-<!--                <div class="campo-pago">-->
-<!--                    <label>🎁 Propina abonada:</label>-->
-<!--                    <input type="text" id="pagoPropina" value="0" step="0.01" min="0" inputmode="decimal"-->
-<!--  pattern="[0-9]+(\.[0-9]{1,2})?">-->
-<!--                </div>-->
-
-<!--                <hr>-->
-
-<!--                &lt;!&ndash; Botones: Guardar y Cerrar Orden &ndash;&gt;-->
-<!--                <div class="botones-pago">-->
-<!--                    <button class="btn-guardar" id="pagoGuardarBtn">💾 Guardar</button>-->
-<!--                    <button class="btn-cerrar-orden" id="pagoCerrarBtn">🔒 Cerrar Orden</button>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </div>-->
 
     <!-- Modal para confirmar pago -->
     <div id="confirmModal" class="modal" style="display: none;">

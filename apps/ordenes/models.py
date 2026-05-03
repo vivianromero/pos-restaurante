@@ -4,12 +4,13 @@ from decimal import Decimal
 from django.conf import settings
 from django.db import models
 from django.db import transaction
-from django.db.models import Sum, F
+from django.db.models import Sum, F, ExpressionWrapper, DecimalField, Value
 from django.utils import timezone
 from django_choices_field import IntegerChoicesField
 
 from ..administracion.models import IdModels, MenuProduct, Table
 from ..core.utils import get_fecha_operacion_actual
+from .managers import OrderManager
 
 
 class EstadoOrden(models.IntegerChoices):
@@ -22,6 +23,7 @@ class EstadoOrden(models.IntegerChoices):
 class FormaPagoOrden(models.IntegerChoices):
     EFECTIVO = 1, 'Efectivo'
     TARJETA = 2, 'Tarjeta'
+
 
 class Order(IdModels):
     numero_orden = models.CharField(max_length=50, unique=True, editable=False, db_index=True)
@@ -45,6 +47,7 @@ class Order(IdModels):
         related_name="locked_orders"
     )
     locked_at = models.DateTimeField(null=True, blank=True)
+    objects = OrderManager()
 
     class Meta:
         indexes = [
@@ -65,7 +68,7 @@ class Order(IdModels):
         Calcula el monto del descuento aplicado
         Returns: Decimal con el valor del descuento
         """
-        descuento = (self.importe_total * self.porc_descuento) / 100
+        descuento = (Decimal(self.importe_total) * Decimal(self.porc_descuento)) / 100
         return descuento.quantize(Decimal('0.00'))
 
     @property
