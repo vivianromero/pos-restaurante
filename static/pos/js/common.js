@@ -1,3 +1,4 @@
+// static/pos/js/common.js
 function mostrarLoading(id, cargando="datos") {
 
     // Mostrar loading en el grid
@@ -133,3 +134,5 @@ async function cargarConfiguracion() {
         };
     }
 }
+
+

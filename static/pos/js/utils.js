@@ -17,7 +17,8 @@ function getCSRFToken() {
 }
 
 function formatearPrecio(precio) {
-    return `$${parseFloat(precio).toLocaleString(undefined, {
+//    toLocaleString 'en-US' para que funcione en otros dispositivos, siempre el mismo formato
+    return `$${parseFloat(precio).toLocaleString('en-US', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     })}`;
@@ -28,8 +29,36 @@ function formatearNumeroOrden(numero) {
     return `#${numero.toString().padStart(3, '0')}`;
 }
 
-function cerrarSesion() {
+async function cerrarSesion() {
+    if (ordenIdActual) {
+        await cerrarOrden();
+    }
     window.location.href = '/logout/';
+}
+
+async function cerrarOrden(ordenId) {
+    if (!ordenId) return; // No hay orden abierta
+
+    try {
+        const url = `/api/ordenes/${ordenId}/cerrar-orden/`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            credentials: 'same-origin'
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            toast(errorData.error || 'No se pudo cerrar la orden', tipo='error');
+            return;
+        }
+    } catch (error) {
+        console.error("Error al cerrar la orden:", error);
+        toast('Error al cerrar la orden: ' + error.message, tipo='error');
+    }
 }
 
 function toast(msg, tipo = 'success', duracion = 3000) {
@@ -80,6 +109,87 @@ function toast(msg, tipo = 'success', duracion = 3000) {
         }, 500);
     }, duracion);
 }
+
+function validarNumeroInput(valor, { min = 0, max = Infinity, decimales = 2 } = {}) {
+
+        if (valor === null || valor === undefined) return '';
+
+        valor = String(valor);
+
+        // coma a punto
+        valor = valor.replace(',', '.');
+
+        // solo números y punto
+        valor = valor.replace(/[^0-9.]/g, '');
+
+        // evitar múltiples puntos
+        const partes = valor.split('.');
+        if (partes.length > 2) {
+            valor = partes[0] + '.' + partes[1];
+        }
+
+        // 🔥 CLAVE: permitir estado intermedio "12."
+        if (valor.endsWith('.')) {
+            return valor;
+        }
+
+        // si empieza con punto ".5" → convertir a "0.5"
+        if (valor.startsWith('.')) {
+            valor = '0' + valor;
+        }
+
+        const num = parseFloat(valor);
+
+        if (isNaN(num)) return '';
+
+        let resultado = num;
+
+        if (resultado < min) resultado = min;
+        if (resultado > max) resultado = max;
+
+        // 🔥 mantener decimales SOLO si ya es número completo
+        if (valor.includes('.')) {
+            const [entero, decimal] = valor.split('.');
+            return `${entero}.${decimal.slice(0, decimales)}`;
+        }
+
+        return String(resultado);
+    }
+
+async function abrirOrdenExistente(orderId) {
+    try {
+        const url = `/api/ordenes/${orderId}/abrir-orden/`;
+        console.log("Intentando abrir orden:", url);
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            credentials: 'same-origin'
+        });
+
+        if (!response.ok) {
+            if (response.status === 403) {
+                const errorData = await response.json();
+                toast(errorData.error || 'Orden en uso por otro usuario', tipo='error');
+                return null; // No continuar si está bloqueada
+            }
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        // ✅ Devuelve los datos completos de la orden
+        const data = await response.json();
+        return data;
+
+    } catch (error) {
+        console.error("Error en abrirOrdenExistente:", error);
+        toast('Error al abrir la orden: ' + error.message, tipo='error');
+        return null;
+    }
+}
+
 
 window.getCSRFToken = getCSRFToken;
 window.formatearPrecio = formatearPrecio;

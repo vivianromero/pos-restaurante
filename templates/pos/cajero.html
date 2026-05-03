@@ -30,8 +30,14 @@
                     <span class="stat-value" id="pendientesCount">0</span>
                 </div>
                 <div class="stat">
-                    <span class="stat-label">💰 Total pendiente:</span>
-                    <span class="stat-value" id="totalPendiente">$0</span>
+                    <span class="stat-label">📊 Importe:</span>
+                    <span class="stat-value" id="totalImporte">$0</span>
+
+                    <span class="stat-label">🏷️ Descuento:</span>
+                    <span class="stat-value" id="totalDescuento">$0</span>
+
+                    <span class="stat-label">💵 Por pagar:</span>
+                    <span class="stat-value" id="totalPorpagar">$0</span>
                 </div>
                 <div class="stat fecha-stat">
                     <div class="fecha-control">
@@ -52,75 +58,92 @@
         </div>
     </div>
 
-    <!-- Modal para detalles de orden y pago -->
-    <div id="ordenModal" class="modal" style="display: none;">
-        <div class="modal-content">
+    <div id="pagoModal" class="modal" style="display: none;">
+        <div class="modal-content modal-content-pago">
+
+            <!-- HEADER -->
             <div class="modal-header">
-                <h2>💰 Orden #<span id="modalNumeroOrden"></span></h2>
+                <h2>Procesar Pago - Orden #<span id="modalNumeroOrden"></span></h2>
                 <button class="modal-close" onclick="cerrarModal()">&times;</button>
             </div>
+
+            <!-- BODY -->
             <div class="modal-body">
+
+                <!-- INFO SUPERIOR -->
                 <div class="modal-info">
-                    <p><strong>Mesa:</strong> <span id="modalMesa"></span></p>
-                    <p><strong>Mesero:</strong> <span id="modalMesero"></span></p>
-                </div>
-
-                <div class="modal-items">
-                    <h3>Productos</h3>
-                    <ul id="modalItemsList" class="modal-items-list"></ul>
-                </div>
-
-                <div class="modal-totales">
-                    <div class="total-line">
-                        <span>Subtotal:</span>
-                        <span id="modalSubtotal">$0</span>
+                    <div>
+                        <p><strong>Mesa:</strong> <span id="modalMesa"></span></p>
+                        <p><strong>Mesero:</strong> <span id="modalMesero"></span></p>
                     </div>
-                    <div class="total-line descuento">
-                        <span>Descuento (<span id="modalDescuentoPorc">0</span>%):</span>
-                        <span id="modalDescuento">-$0</span>
-                    </div>
-                    <div class="total-line propina">
-                        <span>Propina:</span>
-                        <span id="modalPropina">$0</span>
-                    </div>
-                    <div class="total-line total">
-                        <span>Total a pagar:</span>
-                        <span id="modalTotal">$0</span>
+                    <div>
+                        <p><strong>Importe:</strong></p>
+                        <span id="pagoImporteTotal" class="importe">$0.00</span>
                     </div>
                 </div>
 
-                <div class="modal-actions">
-                    <div class="descuento-section">
-                        <label>Descuento (%):</label>
-                        <div class="descuento-control">
-                            <input type="number" id="descuentoInput" min="0" max="100" step="1" value="0">
-                            <button class="btn-aplicar" onclick="aplicarDescuento()">Aplicar</button>
-                        </div>
+                <!-- DESCUENTO + TOTAL -->
+                <div class="grid-2">
+                    <div class="campo-pago">
+                        <label>% Descuento</label>
+                        <input type="text"
+                            id="pagoDescuentoPorcentaje"
+                            value="0"
+                            inputmode="decimal"
+                            placeholder="0.00">
                     </div>
 
-                    <div class="pago-section">
-                        <label>Forma de pago:</label>
-                        <select id="formaPagoSelect" class="forma-pago">
-                            <option value="1">💵 Efectivo</option>
-                            <option value="2">💳 Tarjeta</option>
+                    <div class="resumen-box">
+                        <span>Total a pagar</span>
+                        <div id="pagoTotalAPagar" class="total">$0.00</div>
+                    </div>
+                </div>
+
+                <!-- FORMA DE PAGO -->
+                <div class="grid-3">
+
+                    <div class="campo-pago">
+                        <label>Forma de pago</label>
+                        <select id="pagoFormaPago">
+                            <option value="efectivo">Efectivo</option>
+                            <option value="transferencia">Transferencia</option>
                         </select>
                     </div>
 
-                    <div class="efectivo-section" id="efectivoSection">
-                        <label>Efectivo entregado:</label>
-                        <input type="number" id="efectivoInput" step="1000" value="0">
-                        <div id="cambioInfo" class="cambio-info"></div>
+                    <div class="campo-pago" id="pagoMontoEntregadoGroup">
+                        <label>Monto entregado</label>
+                        <input type="text"
+                            id="pagoMontoEntregado"
+                            value="0"
+                            inputmode="decimal"
+                            placeholder="0.00">
                     </div>
 
-                    <div class="propina-section">
-                        <label>Propina:</label>
-                        <input type="number" id="propinaInput" step="1000" value="0">
+                    <div class="resumen-box" id="pagoDevoluciondiv">
+                        <span>Devolución</span>
+                        <div id="pagoDevolucion" class="devolucion">$0.00</div>
                     </div>
+
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-cancelar" onclick="cerrarModal()">Cancelar</button>
-                <button class="btn-pagar" onclick="registrarPago()">✅ Cobrar</button>
+
+                <!-- PROPINA -->
+                <div class="campo-pago">
+                    <label>Propina</label>
+                    <input type="text"
+                        id="pagoPropina"
+                        value="0"
+                        inputmode="decimal"
+                        placeholder="0.00">
+                </div>
+
+                <hr>
+
+                <!-- BOTONES -->
+                <div class="botones-pago">
+                    <button class="btn-guardar" id="pagoGuardarBtn" onclick="guardarPago('guardar')">Guardar</button>
+                    <button class="btn-cerrar-orden" id="pagoCerrarBtn" onclick="guardarPago('pagar')">Efectuar Pago</button>
+                </div>
+
             </div>
         </div>
     </div>
@@ -129,14 +152,13 @@
     <div id="confirmModal" class="modal" style="display: none;">
         <div class="modal-content small">
             <div class="modal-header">
-                <h2>⚠️ Cambio de Fecha</h2>
+                <h2>⚠️ Confirmar</h2>
             </div>
             <div class="modal-body">
                 <p id="confirmMessage" style="white-space: pre-line;"></p>
                 <p id="cambioMessage" class="cambio-message"></p>
             </div>
             <div class="modal-footer">
-<!--                <button class="btn-cancelar" onclick="cerrarConfirmModal()">Aceptar</button>-->
                 <button class="btn-confirm" id="confirmPagoBtn">Aceptar</button>
             </div>
         </div>
@@ -161,7 +183,8 @@
             </div>
         </div>
     </div>
-    <!-- Modal confitmar cambiar fecha -->
+
+    <!-- Modal confirmar cambiar fecha -->
     <div id="customModal" class="custom-modal" style="display: none;">
         <div class="custom-modal-content">
             <div class="custom-modal-header">
@@ -176,10 +199,10 @@
             </div>
         </div>
     </div>
+
     <script src="{% static 'pos/js/config.js' %}"></script>
     <script src="{% static 'pos/js/utils.js' %}"></script>
     <script src="{% static 'pos/js/common.js' %}"></script>
     <script src="{% static 'pos/js/cajero.js' %}"></script>
-
 </body>
 </html>

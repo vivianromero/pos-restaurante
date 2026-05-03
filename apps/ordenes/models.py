@@ -1,13 +1,16 @@
+from datetime import timedelta
 from decimal import Decimal
 
 from django.conf import settings
 from django.db import models
 from django.db import transaction
-from django.db.models import Sum, F
+from django.db.models import Sum, F, ExpressionWrapper, DecimalField, Value
+from django.utils import timezone
 from django_choices_field import IntegerChoicesField
 
 from ..administracion.models import IdModels, MenuProduct, Table
 from ..core.utils import get_fecha_operacion_actual
+from .managers import OrderManager
 
 
 class EstadoOrden(models.IntegerChoices):
@@ -21,6 +24,7 @@ class FormaPagoOrden(models.IntegerChoices):
     EFECTIVO = 1, 'Efectivo'
     TARJETA = 2, 'Tarjeta'
 
+
 class Order(IdModels):
     numero_orden = models.CharField(max_length=50, unique=True, editable=False, db_index=True)
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, db_index=True)
@@ -31,10 +35,19 @@ class Order(IdModels):
     cancelada = models.BooleanField(default=False, db_index=True)
     motivo_cancelacion = models.TextField(blank=True, null=True)
     forma_pago = IntegerChoicesField(choices_enum=FormaPagoOrden, verbose_name='Forma de Pago', default=FormaPagoOrden.EFECTIVO)
-    efectivo_entregado = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Efectivo entregado', default=0.00)
+    # efectivo_entregado = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Efectivo entregado', default=0.00)
     propina = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Propina Recibida', default=0.00)
     importe_total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, editable=False)
     porc_descuento = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, verbose_name='% Descuento')
+    locked_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="locked_orders"
+    )
+    locked_at = models.DateTimeField(null=True, blank=True)
+    objects = OrderManager()
 
     class Meta:
         indexes = [
@@ -49,16 +62,20 @@ class Order(IdModels):
     def __str__(self):
         return f"Orden #{self.id} - Mesa {self.mesa.numero} - {self.usuario.username}"
 
-    def calcula_cambio(self):
+    @property
+    def monto_descuento(self):
         """
-        Calcula el cambio a devolver al cliente si la forma de pago es efectivo.
+        Calcula el monto del descuento aplicado
+        Returns: Decimal con el valor del descuento
         """
-        if self.forma_pago == FormaPagoOrden.EFECTIVO:
-            total = self.importe_total()
-            cambio = self.efectivo_entregado - total
-            return cambio if cambio >= 0 else Decimal("0.00")
-        return Decimal("0.00")
+        descuento = (Decimal(self.importe_total) * Decimal(self.porc_descuento)) / 100
+        return descuento.quantize(Decimal('0.00'))
 
+    @property
+    def total_apagar(self):
+        """Calcula total a pagar basado en importe_total y monto a descontar"""
+
+        return self.importe_total - self.monto_descuento
 
     def calcular_total(self):
         """Calcula el total basado en los items y descuentos"""
@@ -79,6 +96,23 @@ class Order(IdModels):
             ).count() + 1
         return f"{mesa_numero:03d}-{fecha_str.replace('-', '')}-{consecutivo:04d}"
 
+    def lock(self, user):
+        if self.locked_by and self.locked_by != user:
+            raise PermissionError(f"Orden bloqueada por {self.locked_by.username}")
+        self.locked_by = user
+        self.locked_at = timezone.now()
+        self.save()
+
+    def unlock(self):
+        self.locked_by = None
+        self.locked_at = None
+        self.save()
+
+    def is_lock_expired(self): #si la orden al abrirla ya lleva r min abiertas se libera
+        if self.locked_at:
+            return timezone.now() - self.locked_at > timedelta(minutes=5)
+        return False
+
     def save(self, *args, **kwargs):
 
         # obj = Order.objects.filter(pk=self.pk).first()
@@ -86,7 +120,9 @@ class Order(IdModels):
             self.numero_orden = self.generar_numero_orden()
 
         # if obj and obj.porc_descuento != self.porc_descuento:
-        self.calcular_total()
+        self.importe_total = self.items.aggregate(
+            total=Sum(F('cantidad') * F('precio_unitario'))
+        )['total'] or Decimal('0')
 
         super().save(*args, **kwargs)
 

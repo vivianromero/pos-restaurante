@@ -1,8 +1,11 @@
 # apps/api/views/orden_views.py
 import logging
 
+from django.core.exceptions import FieldError
 from django.core.exceptions import ValidationError
+from django.db import DatabaseError
 from django.db import transaction
+from django.utils import timezone
 from django_filters import rest_framework as filters
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -15,6 +18,7 @@ from apps.administracion.models import ConfiguracionSystem, Table, MenuProduct
 from apps.core.utils import get_fecha_operacion_actual
 from apps.ordenes.models import Order, OrderItem, EstadoOrden
 from ..serializers.orden_serializer import OrdenSerializer, OrdenCreateSerializer
+from apps.ordenes.filters import OrdenFilter
 
 logger = logging.getLogger(__name__)
 
@@ -24,76 +28,6 @@ class OrdenPagination(PageNumberPagination):
     page_size = 20
     page_size_query_param = 'limit'
     max_page_size = 100
-
-
-class OrdenFilter(filters.FilterSet):
-    """Filtros para Orden usando django-filter"""
-
-    # Filtros exactos
-    id = filters.UUIDFilter(field_name='id')
-    numero_orden = filters.CharFilter(field_name='numero_orden', lookup_expr='icontains')
-    fecha = filters.DateFilter(field_name='fecha_operacion')
-    fecha_desde = filters.DateFilter(field_name='fecha_operacion', lookup_expr='gte')
-    fecha_hasta = filters.DateFilter(field_name='fecha_operacion', lookup_expr='lte')
-    usuario_id = filters.NumberFilter(field_name='usuario__id')
-    usuario = filters.CharFilter(field_name='usuario__username', lookup_expr='icontains')
-    mesa = filters.NumberFilter(field_name='mesa__numero')
-    mesa_id = filters.UUIDFilter(field_name='mesa__id')
-    cancelada = filters.BooleanFilter(field_name='cancelada')
-    total_min = filters.NumberFilter(field_name='importe_total', lookup_expr='gte')
-    total_max = filters.NumberFilter(field_name='importe_total', lookup_expr='lte')
-
-    # Filtro especial para estado
-    estado = filters.NumberFilter(field_name='estado')
-    estado_label = filters.CharFilter(method='filter_estado_nombre')
-
-    def filter_estado_nombre(self, queryset, name, value):
-        """Filtrar por nombre de estado"""
-        estado_map = {
-            'pendiente': EstadoOrden.PENDIENTE,
-            'procesando': EstadoOrden.PROCESANDO,
-            'servida': EstadoOrden.SERVIDA,
-            'pendientepago': EstadoOrden.PENDIENTEPAGO,
-            'pagada': EstadoOrden.PAGADA,
-        }
-        estado_lower = value.lower()
-        if estado_lower in estado_map:
-            return queryset.filter(estado=estado_map[estado_lower].value)
-        return queryset
-
-    class Meta:
-        model = Order
-        fields = [
-            'id', 'numero_orden', 'fecha', 'fecha_desde', 'fecha_hasta',
-            'usuario_id', 'usuario', 'mesa', 'mesa_id', 'cancelada',
-            'estado', 'total_min', 'total_max'
-        ]
-
-    def filter_queryset(self, queryset):
-        """Aplicar filtros personalizados"""
-        queryset = super().filter_queryset(queryset)
-
-        # Excluir canceladas por defecto si no se especifica
-        cancelada_param = self.request.query_params.get('cancelada')
-        if cancelada_param is None:
-            queryset = queryset.filter(cancelada=False)
-
-        # Filtro estado_diferente
-        estado_diferente = self.request.query_params.get('estado_diferente')
-        if estado_diferente:
-            estado_map = {
-                'pendiente': EstadoOrden.PENDIENTE,
-                'procesando': EstadoOrden.PROCESANDO,
-                'servida': EstadoOrden.SERVIDA,
-                'pendientepago': EstadoOrden.PENDIENTEPAGO,
-                'pagada': EstadoOrden.PAGADA,
-            }
-            if estado_diferente.lower() in estado_map:
-                queryset = queryset.exclude(estado=estado_map[estado_diferente.lower()])
-            else:
-                raise ValidationError(f'Estado diferente inválido. Opciones: {list(estado_map.keys())}')
-
-        return queryset
 
 
 class OrdenViewSet(viewsets.ModelViewSet):
@@ -303,7 +237,7 @@ class OrdenViewSet(viewsets.ModelViewSet):
         if not items_data:
             return Response({
                 'success': False,
-                'error': 'Debe enviar al menos un item'
+                'error': 'Debe tener al menos un producto'
             }, status=status.HTTP_400_BAD_REQUEST)
 
         with transaction.atomic():
@@ -384,3 +318,62 @@ class OrdenViewSet(viewsets.ModelViewSet):
             'estado': order.estado,
             'estado_label': order.get_estado_display()
         })
+
+    @action(detail=True, methods=['post'], url_path='abrir-orden')
+    def abrir_orden(self, request, pk=None):
+        with transaction.atomic():
+            order = self.get_queryset().select_for_update().get(pk=pk)
+
+            # Si está bloqueada por otro usuario
+            if order.locked_by and order.locked_by != request.user:
+                return Response(
+                    {"error": f"Orden en uso por {order.locked_by.username}"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            # Bloquear por el usuario actual
+            order.locked_by = request.user
+            order.locked_at = timezone.now()
+            order.save()
+
+            # 🔑 Devolver los datos completos de la orden
+            serializer = self.get_serializer(order)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='cerrar-orden')
+    def cerrar_orden(self, request, pk=None):
+        with transaction.atomic():
+            order = self.get_queryset().select_for_update().get(pk=pk)
+
+            # Solo quien la abrió puede cerrarla
+            if order.locked_by and order.locked_by != request.user:
+                return Response(
+                    {"error": f"No puedes cerrar la orden, está bloqueada por {order.locked_by.username}"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            order.locked_by = None
+            order.locked_at = None
+            order.save()
+            return Response({"ok": "Orden cerrada y desbloqueada"})
+
+    @action(detail=False, methods=['get'], url_path='resumen')
+    def resumen(self, request):
+        try:
+            # queryset = self.filter_queryset(self.get_queryset())
+            # resumen = Order.objects.calcular_resumen(queryset)
+            filters = request.query_params.dict()
+            resumen = Order.objects.calcular_resumen(filters, request)
+            return Response(resumen, status=status.HTTP_200_OK)
+        except FieldError as e:
+            return Response(
+                {"error": f"Filtro inválido: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except DatabaseError as e:
+            return Response(
+                {"error": "Error en la base de datos", "detalle": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
