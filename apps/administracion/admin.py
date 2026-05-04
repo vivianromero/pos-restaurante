@@ -1,5 +1,7 @@
 from django import forms
+# apps/administration/admin.py
 from django.contrib import admin
+from django.contrib import messages
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
@@ -8,13 +10,32 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from django.urls import path
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 
+from apps.core.hardware import HardwareID
 from .forms import CustomUserChangeForm, CustomUserCreationForm
 from .models import ConfiguracionDiaria, Product, Table, Menu, MenuProduct, Categoria
 from .models import ConfiguracionSystem
 from .models import CustomUser
 from ..ordenes.models import Order, OrderItem
 
+
+class LimiteLicenciaAdmin(admin.ModelAdmin):
+    """Clase base para validar límites de licencia"""
+
+    def save_model(self, request, obj, form, change):
+        raise NotImplementedError("Debes implementar save_model")
+
+    def response_add(self, request, obj, post_url_continue=None):
+        """Evita el mensaje de éxito si no se guardó el objeto"""
+        if obj.pk is None:
+            from django.http import HttpResponseRedirect
+            from django.urls import reverse
+            # Obtener el nombre del modelo dinámicamente
+            app_label = self.model._meta.app_label
+            model_name = self.model._meta.model_name
+            return HttpResponseRedirect(reverse(f'admin:{app_label}_{model_name}_changelist'))
+        return super().response_add(request, obj, post_url_continue)
 
 @admin.register(ConfiguracionSystem)
 class ConfiguracionSystemAdmin(admin.ModelAdmin):
@@ -23,17 +44,18 @@ class ConfiguracionSystemAdmin(admin.ModelAdmin):
     fieldsets = (
         ('🍳 Módulo de Cocina', {
             'fields': ('modulo_cocina_activo', 'pantalla_cocina_ip', 'pantalla_cocina_puerto'),
-            'description': 'Configuración del flujo de pedidos a cocina'
         }),
         ('🖨️ Impresión', {
             'fields': ('impresion_automatica', 'impresora_nombre', 'copias_ticket'),
-            'description': 'Configuración de impresión de tickets',
             'classes': ('collapse',)
         }),
+        ('🔑 Licencia', {
+            'fields': ('licencia',),
+            'description': 'Ingrese el hash de licencia proporcionado por el proveedor'
+        }),
         ('📋 Información', {
-            'fields': ('actualizado_por', 'fecha_actualizacion'),
-            'classes': ('collapse',),
-            'description': 'Información de auditoría (se llena automáticamente)'
+            'fields': ('fecha_actualizacion',),
+            'classes': ('collapse',)
         }),
     )
 
@@ -41,11 +63,61 @@ class ConfiguracionSystemAdmin(admin.ModelAdmin):
         'modulo_cocina_activo',
         'pantalla_cocina_ip',
         'impresion_automatica',
-        'actualizado_por',
+        'estado_licencia',
         'fecha_actualizacion'
     ]
 
-    readonly_fields = ['actualizado_por', 'fecha_actualizacion']  # 👈 Solo lectura
+    readonly_fields = ['fecha_actualizacion']
+
+    def estado_licencia(self, obj):
+        """Muestra el estado de la licencia en la lista"""
+        if obj.es_licencia_valida:
+            return mark_safe('<span style="color: green; font-weight: bold;">✅ Válida</span>')
+        return mark_safe('<span style="color: #ff9800; font-weight: bold;">⚠️ Demo</span>')
+
+    estado_licencia.short_description = "Licencia"
+
+    def get_form(self, request, obj=None, **kwargs):
+        """Agrega el botón y el hardware ID al formulario"""
+        form = super().get_form(request, obj, **kwargs)
+        return form
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        """Añade información adicional al contexto del formulario"""
+        extra_context = extra_context or {}
+
+        # Obtener hardware ID
+        cpu_id = HardwareID.get_cpu_id()
+        if not cpu_id:
+            import platform
+            cpu_id = platform.node()
+
+        extra_context['hardware_id'] = cpu_id
+        extra_context['licencia_valida'] = self.model.objects.get(
+            pk=object_id).es_licencia_valida if object_id else False
+
+        return super().change_view(request, object_id, form_url, extra_context=extra_context)
+
+    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
+        """Añade el botón en el formulario de edición"""
+        extra_context = extra_context or {}
+
+        # Obtener hardware ID
+        cpu_id = HardwareID.get_cpu_id()
+        if not cpu_id:
+            import platform
+            cpu_id = platform.node()
+
+        extra_context['hardware_id'] = cpu_id
+
+        # Obtener estado de licencia
+        if object_id:
+            config = self.model.objects.get(pk=object_id)
+            extra_context['licencia_valida'] = config.es_licencia_valida
+        else:
+            extra_context['licencia_valida'] = False
+
+        return super().changeform_view(request, object_id, form_url, extra_context)
 
     def save_model(self, request, obj, form, change):
         """Guarda el modelo asignando automáticamente el usuario actual"""
@@ -384,7 +456,7 @@ class CategoriaAdmin(admin.ModelAdmin):
     )
 
 @admin.register(Product)
-class ProductAdmin(admin.ModelAdmin):
+class ProductAdmin(LimiteLicenciaAdmin):
     list_display = ('categoria', 'nombre', 'disponible', 'imagen_preview')
     list_filter = ('categoria', 'disponible',)
     search_fields = ('nombre',)
@@ -417,10 +489,32 @@ class ProductAdmin(admin.ModelAdmin):
     imagen_preview.short_description = "Vista previa"
     imagen_preview_real.short_description = "Vista previa"
 
+    def save_model(self, request, obj, form, change):
+        config = ConfiguracionSystem.objects.get_cached_data()
+        puede, mensaje = config.puede_crear_productos()
+
+        if not puede:
+            messages.error(request, mensaje)
+            obj.pk = None
+            return
+        super().save_model(request, obj, form, change)
+
 @admin.register(Table)
-class TableAdmin(admin.ModelAdmin):
+class TableAdmin(LimiteLicenciaAdmin):
     list_display = ("numero", "activa")
     list_filter = ("activa",)
+
+    def save_model(self, request, obj, form, change):
+        config = ConfiguracionSystem.objects.get_cached_data()
+        puede, mensaje = config.puede_crear_mesa()
+
+        if not puede:
+            messages.error(request, mensaje)
+            # Forzar que no se guarde
+            obj.pk = None
+            return
+
+        super().save_model(request, obj, form, change)
 
 @admin.register(Menu)
 class MenuAdmin(admin.ModelAdmin):
@@ -533,7 +627,6 @@ class CustomAdminSite(admin.AdminSite):
         return HttpResponse(html)
 
 
-# Reemplazar el admin por el personalizado
 admin_site = CustomAdminSite(name="custom_admin")
 
 

@@ -1,4 +1,5 @@
 # apps/core/decorators.py
+
 from functools import wraps
 
 from django.contrib.auth import REDIRECT_FIELD_NAME
