@@ -1,0 +1,82 @@
+LEEME - POS System
+==================
+
+Este paquete instala el sistema POS como servicio en Linux.
+
+1. Instalación del paquete
+--------------------------
+Ejecutar en la terminal:
+
+    sudo apt install ./pos-system_1.0.0_amd64.deb
+
+Nota: si ya estaba instalado, se actualizará a la versión más reciente.
+
+2. Configuración inicial
+------------------------
+El servicio tiene un archivo de entorno en:
+
+    /etc/pos-system/pos-system.env
+
+donde se configura la conexión a la base de datos debe editarlo y adaptar la configuración
+ 
+ sudo nano /etc/pos-system/pos-system.env
+ 
+Ejemplo de configuración mínima:
+
+    POSTGRES_HOST=localhost
+    POSTGRES_PORT=5432
+    POSTGRES_DB=pos_system
+    POSTGRES_USER=pos_system
+    POSTGRES_PASSWORD=pos_system.123*-+
+
+3. Caso PostgreSQL local
+------------------------
+Si PostgreSQL está instalado en la misma máquina, el instalador intentará crear
+automáticamente el usuario y la base de datos definidos en el archivo `.env`.
+
+4. Caso PostgreSQL remoto
+-------------------------
+Si PostgreSQL está en otro servidor:
+
+- El instalador **no crea automáticamente** usuario ni base de datos.
+- Debe crear manualmente en el servidor remoto:
+
+  ```sql
+  CREATE USER pos_system WITH PASSWORD 'pos_system.123*-+';
+  ALTER ROLE pos_system WITH SUPERUSER;
+  CREATE DATABASE pos_system OWNER pos_system;
+  
+5. Gestión del servicio
+-----------------------
+- Iniciar el servicio:
+    sudo systemctl start pos-system.service
+    
+- Reiniciar el servicio
+    sudo systemctl start pos-system.service
+
+- Detener el servicio:
+    sudo systemctl stop pos-system.service
+
+- Ver estado:
+    systemctl status pos-system.service
+
+El servicio se habilita automáticamente al instalar el paquete.
+
+Luego de cambiar las configuración a la base de datos /etc/pos-system/pos-system.env debe reiniciarlo
+
+6. Verificación
+---------------
+Una vez iniciado, el sistema debe responder en:
+
+    http://localhost         para la app de restaurant
+    http://localhost/admin   para el administrador usuario (admin_app) password (admin) se recomienda cambiar la contraseña una vez iniciada sesión
+
+7. Desinstalación
+-----------------
+Para eliminar el paquete y sus archivos:
+
+    sudo apt remove pos-system -y
+    sudo apt purge pos-system -y
+    sudo apt autoremove -y
+
+

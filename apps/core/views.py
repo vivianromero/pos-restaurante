@@ -16,7 +16,7 @@ from .decorators import es_mesero, es_cocina, es_cajero
 
 
 class CustomLoginView(LoginView):
-    template_name = 'registration/login.html'
+    template_name = 'pos/login.html'
     authentication_form = AuthenticationForm
     opcion = 'mesero'
 

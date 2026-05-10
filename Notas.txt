@@ -1,0 +1,55 @@
+pyinstaller backend.spec
+
+sudo systemctl stop pos-system.service
+sudo systemctl disable pos-system.service
+
+sudo apt remove --purge pos-system -y
+sudo apt autoremove -y
+sudo rm -f /lib/systemd/system/pos-system.service
+sudo rm -f /etc/nginx/sites-enabled/pos-system
+sudo rm -f /etc/nginx/sites-available/pos-system
+sudo systemctl daemon-reload
+sudo systemctl reset-failed
+
+make clean
+make
+
+sudo apt install ./pos-system_1.0.0_amd64.deb
+
+sudo nano /etc/pos-system/pos-system.env
+
+systemctl restart pos-system
+
+systemctl status pos-system
+
+----Desinstalar nginx
+# Detener el servicio
+sudo systemctl stop nginx
+
+# Deshabilitarlo para que no arranque al inicio
+sudo systemctl disable nginx
+
+# Desinstalar el paquete
+sudo apt remove nginx nginx-common -y
+
+# Eliminar también archivos de configuración residuales
+sudo apt purge nginx nginx-common -y
+
+# Limpiar dependencias que ya no se usan
+sudo apt autoremove -y
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

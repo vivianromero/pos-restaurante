@@ -24,7 +24,6 @@ from django.urls import path, include
 from apps.core.views import (cambiar_password, custom_logout, MeseroView, CustomLoginView, CocinaView,
                              CajeroView)
 
-
 urlpatterns = [
     path('', lambda request: redirect('login'), name='home'),
     path('admin/', admin.site.urls),  # El middleware protege esto
@@ -41,6 +40,6 @@ urlpatterns = [
     path('api/', include('apps.api.urls')),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+# urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
 

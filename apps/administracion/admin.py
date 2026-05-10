@@ -23,8 +23,23 @@ from ..ordenes.models import Order, OrderItem
 class LimiteLicenciaAdmin(admin.ModelAdmin):
     """Clase base para validar límites de licencia"""
 
+    def validar_creacion(self, request, obj, change):
+        """
+        Método que deben implementar las clases hijas para validar
+        Debe retornar (puede, mensaje)
+        """
+        raise NotImplementedError("Debes implementar validar_creacion en la clase hija")
+
     def save_model(self, request, obj, form, change):
-        raise NotImplementedError("Debes implementar save_model")
+
+        if not change:
+            puede, mensaje = self.validar_creacion(request, obj, change)
+            messages.error(request, mensaje)
+            if not puede:
+            # Forzar que no se guarde
+                obj.pk = None
+                return
+        super().save_model(request, obj, form, change)
 
     def response_add(self, request, obj, post_url_continue=None):
         """Evita el mensaje de éxito si no se guardó el objeto"""
@@ -489,32 +504,22 @@ class ProductAdmin(LimiteLicenciaAdmin):
     imagen_preview.short_description = "Vista previa"
     imagen_preview_real.short_description = "Vista previa"
 
-    def save_model(self, request, obj, form, change):
+    def validar_creacion(self, request, obj, change):
+        """Valida si se puede crear una nueva mesa"""
         config = ConfiguracionSystem.objects.get_cached_data()
-        puede, mensaje = config.puede_crear_productos()
+        return config.puede_crear_productos()
 
-        if not puede:
-            messages.error(request, mensaje)
-            obj.pk = None
-            return
-        super().save_model(request, obj, form, change)
 
 @admin.register(Table)
 class TableAdmin(LimiteLicenciaAdmin):
     list_display = ("numero", "activa")
     list_filter = ("activa",)
 
-    def save_model(self, request, obj, form, change):
+    def validar_creacion(self, request, obj, change):
+        """Valida si se puede crear una nueva mesa"""
         config = ConfiguracionSystem.objects.get_cached_data()
-        puede, mensaje = config.puede_crear_mesa()
+        return config.puede_crear_mesa()
 
-        if not puede:
-            messages.error(request, mensaje)
-            # Forzar que no se guarde
-            obj.pk = None
-            return
-
-        super().save_model(request, obj, form, change)
 
 @admin.register(Menu)
 class MenuAdmin(admin.ModelAdmin):

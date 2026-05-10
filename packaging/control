@@ -1,0 +1,17 @@
+Package: pos-system
+Version: 1.0.0
+Section: utils
+Priority: optional
+Architecture: amd64
+Depends: nginx
+Maintainer: Vivian M. Romero Buchillón <vivian.romero.buchillon@gmail.com>
+Description: POS System para restaurantes
+ Este paquete instala el sistema POS como servicio en Linux.
+ .
+ La documentación principal se encuentra en:
+   /usr/share/doc/pos-system/LEEME.txt
+ .
+ Incluye instrucciones de instalación, configuración inicial,
+ gestión del servicio y desinstalación.
+
+

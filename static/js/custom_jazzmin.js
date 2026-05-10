@@ -10,14 +10,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const passwordFields = document.querySelectorAll("input[type='password']");
     passwordFields.forEach((field) => {
         const toggleBtn = document.createElement("span");
-        toggleBtn.classList.add("fas", "fa-lock");  // Usar el icono de FontAwesome
+        toggleBtn.classList.add("fas", "fa-eye");  // Usar el icono de FontAwesome
         toggleBtn.style.cursor = "pointer";
         toggleBtn.style.position = "absolute";  // Posicionar el icono dentro del campo
         toggleBtn.style.right = "10px";         // Alineado a la derecha
         toggleBtn.style.top = "50%";            // Centrado verticalmente
         toggleBtn.style.transform = "translateY(-50%)";  // Ajusta el centrado vertical
         toggleBtn.style.zIndex = "9999";        // Asegura que el icono esté por encima del campo
-        toggleBtn.style.fontSize = "18px";      // Ajusta el tamaño del icono
+        toggleBtn.style.fontSize = "12px";      // Ajusta el tamaño del icono
 
         // Tooltip dinámico basado en el estado de la contraseña
         toggleBtn.title = "Mostrar contraseña"; // Inicialmente muestra "Mostrar contraseña"
@@ -25,8 +25,8 @@ document.addEventListener("DOMContentLoaded", function () {
         toggleBtn.addEventListener("click", function () {
             const isPassword = field.getAttribute("type") === "password";
             field.setAttribute("type", isPassword ? "text" : "password");
-            toggleBtn.classList.toggle("fa-lock");
-            toggleBtn.classList.toggle("fa-lock-open");
+            toggleBtn.classList.toggle("fa-eye-slash");
+            toggleBtn.classList.toggle("fa-eye");
 
             // Cambiar el texto del tooltip
             toggleBtn.title = isPassword ? "Ocultar contraseña" : "Mostrar contraseña";
