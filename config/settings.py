@@ -10,11 +10,50 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
-import os
+import os, sys
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-# BASE_DIR = Path(__file__).resolve().parent.parent
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+STATICFILES_DIRS = []
+DEBUG = True
+if getattr(sys, 'frozen', False):
+    # BASE_DIR = sys._MEIPASS
+    BASE_DIR = os.path.dirname(sys.executable)
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+    DEBUG = False
+    load_dotenv("/etc/pos-system/pos-system.env")
+
+    os.environ.setdefault(
+        "DJANGO_SETTINGS_MODULE",
+        "config.settings"
+    )
+else:
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+    STATICFILES_DIRS = [
+        os.path.join(BASE_DIR, 'static')
+    ]
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+TEMPLATES[0]['DIRS'] = [os.path.join(BASE_DIR, 'templates'),]
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
@@ -23,10 +62,11 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'django-insecure-*a9*h&f11!ldj+dgd$5@(=fxb+g%9^03hu!k&)_a2(8aig5(*)'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+
 
 ALLOWED_HOSTS = ['*']
 
+USE_X_FORWARDED_HOST = True
 
 # Application definition
 
@@ -44,6 +84,7 @@ INSTALLED_APPS = [
     'apps.administracion',
     'apps.ordenes',
     'apps.caja',
+    'apps.core',
 ]
 
 AUTH_USER_MODEL = "administracion.CustomUser"
@@ -61,37 +102,27 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'config.urls'
 
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-            ],
-        },
-    },
-]
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+import os
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'HOST': '172.17.0.3',
-        'NAME': 'pos_system1',
-        'PASSWORD': 'pos_system.123*-+',
-        'PORT': 5432,
-        'USER': 'pos_system'}
+        'HOST': os.environ.get('POSTGRES_HOST', '172.17.0.3'),
+        'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+        'NAME': os.environ.get('POSTGRES_DB', 'pos_system'),
+        'USER': os.environ.get('POSTGRES_USER', 'pos_system'),
+        'PASSWORD': os.environ.get(
+            'POSTGRES_PASSWORD',
+            'pos_system.123*-+'
+        ),
+    }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
@@ -141,13 +172,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Static files (CSS, JavaScript, Images)
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
 STATIC_URL = '/static/'
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static')
-]
+
+# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # FECHA_OPERACION = timezone.localdate()
 
@@ -167,6 +196,12 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/mesero/'
 # LOGOUT_REDIRECT_URL = '/login/'
 
+print("BASE_DIR:", BASE_DIR)
+print("TEMPLATES DIR:", os.path.join(BASE_DIR, 'templates'))
+print("EXISTE?:", os.path.exists(os.path.join(BASE_DIR, 'templates')))
+print("STATIC_ROOT:", STATIC_ROOT)
+
 from .jazzmin_settings import JAZZMIN_SETTINGS
+JAZZMIN_SETTINGS = JAZZMIN_SETTINGS
 
 

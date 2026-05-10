@@ -39,20 +39,22 @@
                 </div>
             {% endif %}
         {% endif %}
-
-        <!-- Bloque adaptado a Bootstrap 5 -->
         <div class="input-group mb-3">
-            <span class="input-group-text"><i class="fas fa-user"></i></span>
-            <input type="text" name="username" class="form-control"
-                   placeholder="{{ form.username.label }}" required>
+            <input type="text" name="username" class="form-control" placeholder="{{ form.username.label }}" required>
+            <div class="input-group-append">
+                <div class="input-group-text">
+                    <span class="fas fa-user"></span>
+                </div>
+            </div>
         </div>
-
         <div class="input-group mb-3">
-            <span class="input-group-text"><i class="fas fa-lock"></i></span>
-            <input type="password" name="password" class="form-control"
-                   placeholder="{{ form.password.label }}" required>
+            <input type="password" name="password" class="form-control" placeholder="{{ form.password.label }}" required>
+            <div class="input-group-append">
+                <div class="input-group-text">
+                    <span class="fas fa-lock"></span>
+                </div>
+            </div>
         </div>
-
         {% url 'admin_password_reset' as password_reset_url %}
         {% if password_reset_url %}
             <div class="mb-3">
@@ -63,7 +65,6 @@
                 </div>
             </div>
         {% endif %}
-
         <div class="row">
             <div class="col-12">
                 <button type="submit" class="btn {{ jazzmin_ui.button_classes.primary }} btn-block">
@@ -73,4 +74,3 @@
         </div>
     </form>
 {% endblock %}
-

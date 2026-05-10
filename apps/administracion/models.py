@@ -8,6 +8,8 @@ from django.db import models
 from django.db import transaction
 from django.utils import timezone
 
+from ..core.hardware import HardwareID
+
 
 class IdModels(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -193,6 +195,13 @@ class ConfiguracionSystemCacheManager(DatosCacheManager):
         config = ConfiguracionSystem.objects.first()
         return config
 
+    def is_license_valid(self):
+        """Retorna True/False usando el cache, sin consultar BD"""
+        config = self.get_cached_data()  # Esto usa el cache
+        if config:
+            return config.es_licencia_valida
+        return False
+
 
 class ConfiguracionSystem(models.Model):
     """Configuración general del sistema"""
@@ -236,6 +245,11 @@ class ConfiguracionSystem(models.Model):
     )
     fecha_actualizacion = models.DateTimeField(auto_now=True,
                                                verbose_name="Fecha de actualización", editable=False)
+
+    licencia = models.CharField(
+        max_length=150,
+        default='demo',
+    )
     objects = ConfiguracionSystemCacheManager()
 
     class Meta:
@@ -244,6 +258,47 @@ class ConfiguracionSystem(models.Model):
 
     def __str__(self):
         return f"Sistema: Cocina={self.modulo_cocina_activo}"
+
+    @property
+    def es_licencia_valida(self):
+        """Verifica si la licencia almacenada coincide con el hardware actual"""
+        if not self.licencia:
+            return False
+        return self.licencia == HardwareID.generar_fingerprint()
+
+    def puede_crear_mesa(self):
+        """
+        Verifica si se puede crear una nueva mesa según la licencia
+        Retorna: (bool, str) - (puede_crear, mensaje_error)
+        """
+        if self.es_licencia_valida:
+            return True, None
+
+        # Modo demostración: límite de 2 mesas
+        max_mesas = 3
+        mesas_actuales = Table.objects.all().count()
+
+        if mesas_actuales >= max_mesas:
+            return False, f"Límite de {max_mesas} mesas alcanzado (Modo demostración)"
+
+        return True, None
+
+    def puede_crear_productos(self):
+        """
+        Verifica si se puede crear un nuevo producto según la licencia
+        Retorna: (bool, str) - (puede_crear, mensaje_error)
+        """
+
+        if self.es_licencia_valida:
+            return True, None
+
+        # Modo demostración: límite de 5 productos
+        max_products = 5
+        productos_actuales = Product.objects.all().count()
+
+        if productos_actuales >= max_products:
+            return False, f"Límite de {max_products} productos alcanzado (Modo demostración)"
+        return True, None
 
 
     def save(self, *args, **kwargs):

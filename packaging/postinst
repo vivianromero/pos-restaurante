@@ -1,0 +1,92 @@
+#!/bin/bash
+set -e
+
+case "$1" in
+    configure)
+
+        echo "=== Configurando POS System ==="
+
+        # -----------------------------
+        # permisos env
+        # -----------------------------
+        if [ -f /etc/pos-system/pos-system.env ]; then
+            chmod 644 /etc/pos-system/pos-system.env || true
+        fi
+
+        # -----------------------------
+        # cargar variables
+        # -----------------------------
+        if [ -f /etc/pos-system/pos-system.env ]; then
+            . /etc/pos-system/pos-system.env
+        fi
+
+        # -----------------------------
+        # PostgreSQL (solo si es local)
+        # -----------------------------
+        if [ "$POSTGRES_HOST" = "localhost" ] || [ "$POSTGRES_HOST" = "127.0.0.1" ]; then
+            echo "=== Configurando PostgreSQL ==="
+
+            sudo -u postgres psql -tc \
+            "SELECT 1 FROM pg_roles WHERE rolname='${POSTGRES_USER}'" \
+            | grep -q 1 || \
+            sudo -u postgres psql -c \
+            "CREATE USER ${POSTGRES_USER} WITH PASSWORD '${POSTGRES_PASSWORD}';"
+
+            sudo -u postgres psql -c "ALTER ROLE ${POSTGRES_USER} WITH SUPERUSER;"
+
+            sudo -u postgres psql -lqt \
+            | cut -d \| -f 1 \
+            | grep -qw "${POSTGRES_DB}" || \
+            sudo -u postgres createdb \
+            -O "${POSTGRES_USER}" \
+            "${POSTGRES_DB}"
+        else
+            echo "PostgreSQL remoto detectado. Se omite creación automática."
+        fi
+
+
+        # -----------------------------
+        # systemd
+        # -----------------------------
+        systemctl daemon-reload || true
+        systemctl enable pos-system.service || true
+
+        # -----------------------------
+        # nginx
+        # -----------------------------
+        NGINX_SITE="/etc/nginx/sites-available/pos-system"
+        NGINX_LINK="/etc/nginx/sites-enabled/pos-system"
+
+        if [ -f "$NGINX_SITE" ]; then
+            rm -f "$NGINX_LINK"
+            ln -sf "$NGINX_SITE" "$NGINX_LINK"
+
+            if nginx -t; then
+                systemctl reload nginx 2>/dev/null || true
+            else
+                echo "ERROR: configuración nginx inválida"
+            fi
+        fi
+
+       echo ""
+       echo "=============================================="
+       echo " POS System instalado correctamente."
+       echo ""
+       echo " Consulte la documentación en:"
+       echo "   /usr/share/doc/pos-system/LEEME.txt"
+       echo ""
+       echo " Recuerde configurar el archivo de entorno en:"
+       echo "   /etc/pos-system/pos-system.env"
+       echo ""
+       echo " Inicie el servicio:"
+       echo "   sudo systemctl start pos-system.service"
+       echo "=============================================="
+       echo ""
+
+        ;;
+esac
+
+exit 0
+
+
+

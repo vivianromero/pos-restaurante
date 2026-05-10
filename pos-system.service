@@ -1,0 +1,27 @@
+[Unit]
+Description=POS System (Uvicorn)
+After=network.target
+
+[Service]
+User=www-data
+WorkingDirectory=/opt/pos-system
+EnvironmentFile=/etc/pos-system/pos-system.env
+ExecStart=/opt/pos-system/backend
+
+Type=simple
+
+Restart=on-failure
+RestartSec=10
+
+# Límites de recursos
+MemoryMax=1G
+LimitNOFILE=4096
+
+# Logs más claros
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+
+

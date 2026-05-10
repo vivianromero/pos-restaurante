@@ -1,0 +1,33 @@
+#!/bin/bash
+set -e
+
+case "$1" in
+    remove|purge)
+
+        echo "=== Eliminando POS System ==="
+
+        # -----------------------------
+        # detener y deshabilitar servicio
+        # -----------------------------
+        systemctl stop pos-system.service 2>/dev/null || true
+        systemctl disable pos-system.service 2>/dev/null || true
+
+        # -----------------------------
+        # nginx cleanup
+        # -----------------------------
+        rm -f /etc/nginx/sites-enabled/pos-system
+        rm -f /etc/nginx/sites-available/pos-system
+
+        # -----------------------------
+        # recargar nginx
+        # -----------------------------
+        systemctl reload nginx 2>/dev/null || true
+
+        echo "POS System eliminado"
+        ;;
+esac
+
+exit 0
+
+
+

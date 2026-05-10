@@ -16,9 +16,9 @@ from rest_framework.response import Response
 
 from apps.administracion.models import ConfiguracionSystem, Table, MenuProduct
 from apps.core.utils import get_fecha_operacion_actual
+from apps.ordenes.filters import OrdenFilter
 from apps.ordenes.models import Order, OrderItem, EstadoOrden
 from ..serializers.orden_serializer import OrdenSerializer, OrdenCreateSerializer
-from apps.ordenes.filters import OrdenFilter
 
 logger = logging.getLogger(__name__)
 
@@ -124,6 +124,15 @@ class OrdenViewSet(viewsets.ModelViewSet):
         """
         Crear una nueva orden
         """
+        config = ConfiguracionSystem.objects.get_cached_data()
+
+        if not config.es_licencia_valida:
+            max_orders = 15
+            return Response({
+                'success': False,
+                'error': f"Límite de {max_orders} órdenes alcanzado (Modo demostración)"
+            }, status=status.HTTP_400_BAD_REQUEST)
+
         serializer = OrdenCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -200,7 +209,6 @@ class OrdenViewSet(viewsets.ModelViewSet):
                     item.subtotal = item.cantidad * item.precio_unitario
                 OrderItem.objects.bulk_update(order_items, ['subtotal'])
 
-            # order.calcular_total()
             order.save()
         return order
 
